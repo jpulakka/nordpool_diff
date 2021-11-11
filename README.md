@@ -1,0 +1,2 @@
+# nordpool_diff
+ 
