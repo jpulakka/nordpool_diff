@@ -1,0 +1,10 @@
+{
+  "domain": "nordpool_diff",
+  "name": "nordpool_diff",
+  "documentation": "https://github.com/jpulakka/nordpool_diff",
+  "requirements": [],
+  "dependencies": ["nordpool"],
+  "codeowners": ["@jpulakka"],
+  "iot_class": "calculated",
+  "version": "0.1.0"
+}
