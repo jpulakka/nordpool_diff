@@ -7,9 +7,15 @@ from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 from homeassistant.util import dt
 
+NORDPOOL_ENTITY = "nordpool_entity"
+FILTER_LENGTH = "filter_length"
+
+# https://developers.home-assistant.io/docs/development_validation/
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
-    vol.Required("nordpool-entity"): str,
-    vol.Required("filter-length"): vol.Coerce(int)
+    vol.Required(NORDPOOL_ENTITY): str,
+    # TODO add sanity checks for filter-length, maybe optional with good default?
+    vol.Required(FILTER_LENGTH): vol.Coerce(int)
+    # TODO add optional name, adjustable unit
 })
 
 
@@ -19,8 +25,8 @@ def setup_platform(
         add_entities: AddEntitiesCallback,
         discovery_info: DiscoveryInfoType | None = None
 ) -> None:
-    nordpool_entity_id = config["nordpool-entity"]
-    filter_length = config["filter-length"]
+    nordpool_entity_id = config[NORDPOOL_ENTITY]
+    filter_length = config[FILTER_LENGTH]
 
     add_entities([NordpoolDiffSensor(hass, nordpool_entity_id, filter_length)])
 
@@ -28,7 +34,6 @@ def setup_platform(
 class NordpoolDiffSensor(SensorEntity):
 
     def __init__(self, hass, nordpool_entity_id, filter_length):
-        # TODO sanity checks for input, good defaults, fail
         self._state = None
         self._hass = hass
         self._nordpool_entity_id = nordpool_entity_id
@@ -49,7 +54,7 @@ class NordpoolDiffSensor(SensorEntity):
 
     @property
     def unit_of_measurement(self) -> str:
-        return "EUR/kWh/h"  # TODO this should depend on nordpool unit
+        return "EUR/kWh/h"  # TODO this should depend on nordpool unit, or at least make adjustable
 
     def update(self) -> None:
         prices = self._get_next_n_hours(len(self._filter))
