@@ -43,7 +43,5 @@ reasonable.
 Restart HA again to load the configuration. Now you should see `nordpool_filtered_N` sensor, where `N`
 corresponds to `filter_length`. You can set up several `nordpool_diff` entities, each with different `filter_length`.
 
----
-
 [^1]: Fancy way of saying that the price for the current hour is subtracted from the average price for the next few
 hours.
