@@ -36,9 +36,9 @@ Modify the `nordpool_entity` value according to your exact entity value.
 The `filter_length` value must be an integer, at least 2. Smallest possible value 2 produces FIR `[-1, 1]`. Value 5
 produces FIR `[-1, 0.25, 0.25, 0.25, 0.25]`. First entry is always -1 and the filter is normalized so that its sum is
 zero. This way the characteristic output magnitude is independent of the filter length. Values larger than 8 have the
-problem that Nordpool prices typically update 8 hours before midnight (in Finland), so at 15:59 you only know prices for
-the next 8 hours. But the filter algorithm pads missing data by using the last entry, so the result should still be
-quite reasonable.
+problem that prices typically update 8 hours before midnight (in Finland), so at 15:59 you only know prices for the next
+8 hours. But the filter algorithm pads missing data by using the last entry, so the result should still be quite
+reasonable.
 
 Restart HA again to load the configuration. Now you should see `nordpool_filtered_N` sensor, where `N`
 corresponds to `filter_length`. You can set up several `nordpool_diff` entities, each with different `filter_length`.
