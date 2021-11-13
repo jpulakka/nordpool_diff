@@ -2,15 +2,15 @@
 
 Requires https://github.com/custom-components/nordpool
 
-Applies non-causal FIR differentiator[^1] to Nord Pool SPOT prices, resulting
+Applies non-causal FIR differentiator[^1] to [Nord Pool](https://www.nordpoolgroup.com/) SPOT prices, resulting
 in [Home Assistant sensor](https://www.home-assistant.io/integrations/sensor/) that:
 
-* Gives positive output when electricity prices are going to increase in the next few hours, compared to current hour
-* Gives negative output when electricity prices are going to decrease in the next few hours, compared to current hour
+* Gives positive output when electricity prices are going to increase in the next few hours
+* Gives negative output when electricity prices are going to decrease in the next few hours
 * Gives ~zero output when electricity prices are going to stay ~constant for the next few hours
 
-The resulting number can be used for e.g. temporal heating shifting, to adjust target temperature of a heater so that it
-will heat a bit more just before prices will go up (so that we can heat less when prices are high), and let the
+The resulting number can be used for e.g. temporal heating shifting, by adjusting target temperature of a heater so that
+it will heat a bit more just before prices will go up (so that we can heat less when prices are high), and let the
 temperature go down a bit just before prices will go down (because soon we can heat cheaper).
 
 Apart from potentially saving some money, this can also save the environment, because expensive peaks are produced by
@@ -45,4 +45,4 @@ corresponds to `filter_length`. You can set up several `nordpool_diff` entities,
 
 ---
 
-[^1]: Fancy way of saying that price of current hour is subtracted from average price of next few hours.
+[^1]: Fancy way of saying that ther price for current hour is subtracted from ther average price for the next few hours.
