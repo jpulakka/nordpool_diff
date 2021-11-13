@@ -9,17 +9,16 @@ predictive sensor that:
 * Gives negative output when electricity prices are going to decrease in the next few hours
 * Gives ~zero output when electricity prices are going to stay ~constant for the next few hours
 
-The output can be used for e.g. temporal shifting of heating, by adjusting target temperature of a heater so that it
-will heat a bit more just before prices will go up (so that we can heat less when prices are high), and let the
-temperature go down a bit just before prices will go down (because soon we can heat cheaper).
+The output can be used for e.g. adjusting target temperature of a heater so that it will heat more before prices will go
+up (to allow heating less when prices are high), and let the temperature go down a bit before prices will go down.
 
-Apart from potentially saving some money, this can also save the environment, because expensive peaks are produced by
-dirtier energy sources.
+Apart from potentially saving some money, this kind of "temporal shifting of heating" can also save the environment,
+because expensive peaks are produced by dirtier energy sources.
 
 ### Installation
 
 1. Install and configure https://github.com/custom-components/nordpool first.
-2. Copy the `nordpool_diff` folder to HA `<config_dir>/custom_components/nordpool_diff/`.
+2. Copy the `nordpool_diff` folder to HA `<config_dir>/custom_components/nordpool_diff/`
 3. Restart HA. (Failing to restart before modifying configuration would give "Integration 'nordpool_diff' not found"
    error message from the configuration.)
 4. Add the following to your `configuration.yaml` file:
@@ -40,7 +39,7 @@ problem that prices typically update 8 hours before midnight (in Finland), so at
 8 hours. But the filter algorithm pads missing data by using the last entry, so the result should still be quite
 reasonable.
 
-Restart HA again to load the configuration. Now you should see `nordpool_filtered_N` sensor, where `N`
+Restart HA again to load the configuration. Now you should see `nordpool_diff_N` sensor, where `N`
 corresponds to `filter_length`. You can set up several `nordpool_diff` entities, each with different `filter_length`.
 
 [^1]: Fancy way of saying that the price for the current hour is subtracted from the average price for the next few
