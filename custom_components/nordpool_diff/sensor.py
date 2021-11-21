@@ -20,7 +20,7 @@ UNIT = "unit"
 # https://github.com/home-assistant/core/blob/dev/homeassistant/helpers/config_validation.py
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
     vol.Required(NORDPOOL_ENTITY): cv.entity_id,
-    vol.Optional(FILTER_LENGTH, default=2): vol.All(vol.Coerce(int), vol.Range(min=2, max=15)),
+    vol.Optional(FILTER_LENGTH, default=2): vol.All(vol.Coerce(int), vol.Range(min=2, max=20)),
     vol.Optional(FILTER_TYPE, default=RECTANGLE): vol.In([RECTANGLE, TRIANGLE]),
     vol.Optional(UNIT, default="EUR/kWh/h"): cv.string
 })
@@ -44,7 +44,6 @@ class NordpoolDiffSensor(SensorEntity):
     _attr_icon = "mdi:flash"
 
     def __init__(self, nordpool_entity_id, filter_length, filter_type, unit):
-        self._state = STATE_UNKNOWN
         self._nordpool_entity_id = nordpool_entity_id
         self._filter = [-1]
         if filter_type == TRIANGLE:
@@ -53,12 +52,12 @@ class NordpoolDiffSensor(SensorEntity):
                 self._filter += [i / triangular_number]
         else:  # RECTANGLE
             self._filter += [1 / (filter_length - 1)] * (filter_length - 1)
+        self._attr_unit_of_measurement = unit
         self._attr_name = f"nordpool_diff_{filter_type}_{filter_length}"
         # https://developers.home-assistant.io/docs/entity_registry_index/ : Entities should not include the domain in
         # their Unique ID as the system already accounts for these identifiers:
         self._attr_unique_id = f"{filter_type}_{filter_length}_{unit}"  # TODO should this rather be a hash?
-        self._attr_unit_of_measurement = unit
-        self._next_hour = STATE_UNKNOWN
+        self._state = self._next_hour = STATE_UNKNOWN
 
     @property
     def state(self):
