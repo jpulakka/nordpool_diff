@@ -1,16 +1,13 @@
-# nordpool_diff custom integration for Home Assistant
+# nordpool_diff custom component for Home Assistant
 
 Requires https://github.com/custom-components/nordpool
 
-Applies non-causal FIR differentiator[^1] to [Nord Pool](https://www.nordpoolgroup.com/) SPOT prices, resulting in
-predictive sensor that:
+Applies non-causal FIR differentiator[^1] to [Nord Pool](https://www.nordpoolgroup.com/) spot prices, resulting in a
+predictive sensor that gives positive output when the price of electricity for the current hour is cheaper compared to
+the next few hours (and negative output in the opposite case).
 
-* Gives positive output when electricity prices are going to increase in the next few hours
-* Gives negative output when electricity prices are going to decrease in the next few hours
-* Gives ~zero output when electricity prices are going to stay ~constant for the next few hours
-
-The output can be used for e.g. adjusting target temperature of a heater so that it will heat more before prices will go
-up (to allow heating less when prices are high), and let the temperature go down a bit before prices will go down.
+The output can be used for e.g. adjusting target temperature of a heater so that it will heat more just before prices
+will go up (to allow heating less when prices are high), and heat less just before prices will go down.
 
 Apart from potentially saving some money, this kind of "temporal shifting of heating" can also save the environment,
 because expensive peaks are produced by dirtier energy sources.
@@ -27,20 +24,44 @@ because expensive peaks are produced by dirtier energy sources.
     sensor:
       - platform: nordpool_diff
         nordpool_entity: sensor.nordpool_kwh_fi_eur_3_095_024
-        filter_length: 5
     ```
-   
-   Modify the `nordpool_entity` value according to your exact entity value.
-   
-   The `filter_length` value must be an integer, at least 2. Smallest possible value 2 produces FIR `[-1, 1]`. Value 5
-   produces FIR `[-1, 0.25, 0.25, 0.25, 0.25]`. First entry is always -1 and the filter is normalized so that its sum is
-   zero. This way the characteristic output magnitude is independent of the filter length. Values larger than 8 have the
-   problem that prices typically update 8 hours before midnight (in Finland), so at 15:59 you only know prices for the next
-   8 hours. But the filter algorithm pads missing data by using the last entry, so the result should still be quite
-   reasonable.
 
-5. Restart HA again to load the configuration. Now you should see `nordpool_diff_N` sensor, where `N`
-corresponds to `filter_length`. You can set up several `nordpool_diff` entities, each with different `filter_length`.
+   Modify the `nordpool_entity` value according to your exact entity value.
+
+5. Restart HA again to load the configuration. Now you should see `nordpool_diff_triangle_10` sensor, where
+   the `triangle_10` part corresponds to optional parameters, explained below. You can set up several `nordpool_diff`
+   entities, each with different parameters.
+
+## Optional parameters
+
+Optional parameters to configure include `filter_length` and `filter_type`, defaults are:
+
+    ```yaml
+    sensor:
+      - platform: nordpool_diff
+        nordpool_entity: sensor.nordpool_kwh_fi_eur_3_095_024
+        filter_length: 10
+        filter_type: triangle
+    ```
+
+`filter_length` value must be an integer between 2...20, and `filter_type` must be either `triangle` or `rectangle`.
+They are best explained by examples:
+
+Smallest possible `filter_length: 2` creates FIR `[-1, 1]`. That is, price for the current hour is subtracted from the
+price of the next hour. Simplest possible differentiator. `filter_type` doesn't make a difference in this case.
+
+`filter_length: 3`, `filter_type: rectangle` creates FIR `[-1, 0.5, 0.5]`.
+
+`filter_length: 3`, `filter_type: triangle` creates FIR `[-1, 0.67, 0.33]`.
+
+`filter_length: 4`, `filter_type: rectangle` creates FIR `[-1, 0.33, 0.33, 0.33]`.
+
+`filter_length: 4`, `filter_type: triangle` creates FIR `[-1, 0.5, 0.33, 0.17]`.
+
+And so on.
+
+First entry is always -1 and the filter is normalized so that its sum is zero. This way the characteristic output
+magnitude is independent of the filter length.
 
 [^1]: Fancy way of saying that the price for the current hour is subtracted from the average price for the next few
 hours.
