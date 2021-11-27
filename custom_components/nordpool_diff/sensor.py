@@ -20,8 +20,8 @@ UNIT = "unit"
 # https://github.com/home-assistant/core/blob/dev/homeassistant/helpers/config_validation.py
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
     vol.Required(NORDPOOL_ENTITY): cv.entity_id,
-    vol.Optional(FILTER_LENGTH, default=2): vol.All(vol.Coerce(int), vol.Range(min=2, max=20)),
-    vol.Optional(FILTER_TYPE, default=RECTANGLE): vol.In([RECTANGLE, TRIANGLE]),
+    vol.Optional(FILTER_LENGTH, default=10): vol.All(vol.Coerce(int), vol.Range(min=2, max=20)),
+    vol.Optional(FILTER_TYPE, default=TRIANGLE): vol.In([RECTANGLE, TRIANGLE]),
     vol.Optional(UNIT, default="EUR/kWh/h"): cv.string
 })
 
