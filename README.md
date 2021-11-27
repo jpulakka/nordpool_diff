@@ -29,11 +29,11 @@ because expensive peaks are produced by dirtier energy sources.
    Modify the `nordpool_entity` value according to your exact entity value.
 
 5. Restart HA again to load the configuration. Now you should see `nordpool_diff_triangle_10` sensor, where
-   the `triangle_10` part corresponds to optional parameters, explained below.'
+   the `triangle_10` part corresponds to optional parameters, explained below.
 
 ## Optional parameters
 
-Optional parameters to configure include `filter_length` and `filter_type`, defaults are:
+Optional parameters to configure include `filter_length` and `filter_type`, defaults are `10` and `triangle`:
 
  ```yaml
  sensor:
@@ -49,21 +49,21 @@ They are best explained by examples:
 Smallest possible `filter_length: 2` creates FIR `[-1, 1]`. That is, price for the current hour is subtracted from the
 price of the next hour, simplest possible differentiator. `filter_type` doesn't make a difference in this case.
 
-`filter_length: 3`, `filter_type: rectangle` creates FIR `[-1, 0.5, 0.5]`.
+`filter_length: 3`, `filter_type: rectangle` creates FIR `[-1, 1/2, 1/2]`.
 
-`filter_length: 3`, `filter_type: triangle` creates FIR `[-1, 0.67, 0.33]`.
+`filter_length: 3`, `filter_type: triangle` creates FIR `[-1, 2/3, 1/3]`.
 
-`filter_length: 4`, `filter_type: rectangle` creates FIR `[-1, 0.33, 0.33, 0.33]`.
+`filter_length: 4`, `filter_type: rectangle` creates FIR `[-1, 1/3, 1/3, 1/3]`.
 
-`filter_length: 4`, `filter_type: triangle` creates FIR `[-1, 0.5, 0.33, 0.17]`.
+`filter_length: 4`, `filter_type: triangle` creates FIR `[-1, 3/6, 2/6, 1/6]`.
 
-`filter_length: 5`, `filter_type: rectangle` creates FIR `[-1, 0.25, 0.25, 0.25, 0.25]`.
+`filter_length: 5`, `filter_type: rectangle` creates FIR `[-1, 1/4, 1/4, 1/4, 1/4]`.
 
-`filter_length: 5`, `filter_type: triangle` creates FIR `[-1, 0.4, 0.3, 0.2, 0.1]`.
+`filter_length: 5`, `filter_type: triangle` creates FIR `[-1, 4/10, 3/10, 2/10, 1/10]`.
 
 And so on. That is, with rectangle, the right side of the filter is "flat". With triangle, the right side is weighting
-soon upcoming hours more than the farther away tail hours. First entry is always -1 and the filter is normalized so that
-its sum is zero. This way the characteristic output magnitude is independent of the settings.
+soon upcoming hours more than the farther away "tail" hours. First entry is always -1 and the filter is normalized so
+that its sum is zero. This way the characteristic output magnitude is independent of the settings.
 
 Exact settings are probably not very critical for most applications. You can choose by setting up `nordpool_diff`
 entities, each with different parameters, plotting them in Lovelace, and picking what you like best. Here is an example:
