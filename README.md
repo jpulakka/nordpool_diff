@@ -16,7 +16,7 @@ because expensive peaks are produced by dirtier energy sources.
 
 1. Install and configure https://github.com/custom-components/nordpool first.
 2. Copy the `nordpool_diff` folder to HA `<config_dir>/custom_components/nordpool_diff/`
-3. Restart HA. (Failing to restart before modifying configuration would give "Integration 'nordpool_diff' not found"
+3. Restart HA. (Skipping restarting before modifying configuration would give "Integration 'nordpool_diff' not found"
    error message from the configuration.)
 4. Add the following to your `configuration.yaml` file:
 
@@ -29,26 +29,25 @@ because expensive peaks are produced by dirtier energy sources.
    Modify the `nordpool_entity` value according to your exact entity value.
 
 5. Restart HA again to load the configuration. Now you should see `nordpool_diff_triangle_10` sensor, where
-   the `triangle_10` part corresponds to optional parameters, explained below. You can set up several `nordpool_diff`
-   entities, each with different parameters.
+   the `triangle_10` part corresponds to optional parameters, explained below.'
 
 ## Optional parameters
 
 Optional parameters to configure include `filter_length` and `filter_type`, defaults are:
 
-    ```yaml
-    sensor:
-      - platform: nordpool_diff
-        nordpool_entity: sensor.nordpool_kwh_fi_eur_3_095_024
-        filter_length: 10
-        filter_type: triangle
-    ```
+ ```yaml
+ sensor:
+   - platform: nordpool_diff
+     nordpool_entity: sensor.nordpool_kwh_fi_eur_3_095_024
+     filter_length: 10
+     filter_type: triangle
+ ```
 
 `filter_length` value must be an integer between 2...20, and `filter_type` must be either `triangle` or `rectangle`.
 They are best explained by examples:
 
 Smallest possible `filter_length: 2` creates FIR `[-1, 1]`. That is, price for the current hour is subtracted from the
-price of the next hour. Simplest possible differentiator. `filter_type` doesn't make a difference in this case.
+price of the next hour, simplest possible differentiator. `filter_type` doesn't make a difference in this case.
 
 `filter_length: 3`, `filter_type: rectangle` creates FIR `[-1, 0.5, 0.5]`.
 
@@ -58,10 +57,18 @@ price of the next hour. Simplest possible differentiator. `filter_type` doesn't 
 
 `filter_length: 4`, `filter_type: triangle` creates FIR `[-1, 0.5, 0.33, 0.17]`.
 
-And so on.
+`filter_length: 5`, `filter_type: rectangle` creates FIR `[-1, 0.25, 0.25, 0.25, 0.25]`.
 
-First entry is always -1 and the filter is normalized so that its sum is zero. This way the characteristic output
-magnitude is independent of the filter length.
+`filter_length: 5`, `filter_type: triangle` creates FIR `[-1, 0.4, 0.3, 0.2, 0.1]`.
+
+And so on. That is, with rectangle, the right side of the filter is "flat". With triangle, the right side is weighting
+soon upcoming hours more than the farther away tail hours. First entry is always -1 and the filter is normalized so that
+its sum is zero. This way the characteristic output magnitude is independent of the settings.
+
+Exact settings are probably not very critical for most applications. You can choose by setting up `nordpool_diff`
+entities, each with different parameters, plotting them in Lovelace, and picking what you like best. Here is an example:
+
+![Diff example](diff_example.png)
 
 [^1]: Fancy way of saying that the price for the current hour is subtracted from the average price for the next few
 hours.
