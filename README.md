@@ -33,7 +33,8 @@ because expensive peaks are produced by dirtier energy sources.
 
 ## Optional parameters
 
-Optional parameters to configure include `filter_length` and `filter_type`, defaults are `10` and `triangle`:
+Optional parameters to configure include `filter_length`, `filter_type` and `unit`, defaults are `10`, `triangle` and
+`"EUR/kWh/h"`, respectively:
 
  ```yaml
  sensor:
@@ -41,10 +42,15 @@ Optional parameters to configure include `filter_length` and `filter_type`, defa
      nordpool_entity: sensor.nordpool_kwh_fi_eur_3_095_024
      filter_length: 10
      filter_type: triangle
+     unit: EUR/kWh/h
  ```
 
+`unit` can be any string. The default is EUR/kWh/h to reflect that the sensor output loosely speaking reflects change
+rate (1/h) of hourly price (EUR/kWh).
+
 `filter_length` value must be an integer between 2...20, and `filter_type` must be either `triangle` or `rectangle`.
-They are best explained by examples:
+They are best explained by examples. For illustrative purposes, the following FIRs have been reflected about the time
+axis; the first multiplier corresponds to current hour and the next multipliers correspond to upcoming hours.
 
 Smallest possible `filter_length: 2` creates FIR `[-1, 1]`. That is, price for the current hour is subtracted from the
 price of the next hour, simplest possible differentiator. `filter_type` doesn't make a difference in this case.
@@ -61,14 +67,22 @@ price of the next hour, simplest possible differentiator. `filter_type` doesn't 
 
 `filter_length: 5`, `filter_type: triangle` creates FIR `[-1, 4/10, 3/10, 2/10, 1/10]`.
 
-And so on. That is, with rectangle, the right side of the filter is "flat". With triangle, the right side is weighting
-soon upcoming hours more than the farther away "tail" hours. First entry is always -1 and the filter is normalized so
-that its sum is zero. This way the characteristic output magnitude is independent of the settings.
+And so on. With rectangle, the right side of the filter is "flat". With triangle, the right side is weighting soon
+upcoming hours more than the farther away "tail" hours. First entry is always -1 and the filter is normalized so that
+its sum is zero. This way the characteristic output magnitude is independent of the settings.
 
-Exact settings are probably not very critical for most applications. You can choose by setting up `nordpool_diff`
-entities, each with different parameters, plotting them in Lovelace, and picking what you like best. Here is an example:
+You can set up several `nordpool_diff` entities, each with different parameters, plot them in Lovelace, and pick what
+you like best. Here is an example:
 
 ![Diff example](diff_example.png)
+
+## Attributes
+
+Apart from the principal value, the sensor provides an attribute `"next_hour"`, which can be useful when we're close to
+hour boundary and making decisions about turning something on; if it's xx:59 and the principal value is above some
+threshold but the next hour value is below the threshold, and we would like to avoid short "on" cycles, then we maybe
+shouldn't turn the thing on at xx:59 if we would turn it off only after 1 minute. This can be avoided by taking the next
+hour value into account.
 
 [^1]: Fancy way of saying that the price for the current hour is subtracted from the average price for the next few
 hours.
