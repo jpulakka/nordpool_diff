@@ -80,6 +80,9 @@ class NordpoolDiffSensor(SensorEntity):
         # Get tomorrow if needed:
         if len(prices) < hour + n and np.attributes["tomorrow_valid"]:
             prices = prices + np.attributes["tomorrow"]
+        # Nordpool sometimes returns null prices, https://github.com/custom-components/nordpool/issues/125
+        # The nulls are typically at (tail of) "tomorrow", so simply removing them is reasonable:
+        prices = [x for x in prices if x is not None]
         # Pad if needed, using last element:
         prices = prices + (hour + n - len(prices)) * [prices[-1]]
         return prices[hour: hour + n]
