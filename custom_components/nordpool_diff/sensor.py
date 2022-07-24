@@ -81,7 +81,7 @@ class NordpoolDiffSensor(SensorEntity):
         return {"next_hour": self._next_hour}
 
     def update(self):
-        prices = self._get_next_n_hours(self._filter_length)  # +1 to calculate next hour
+        prices = self._get_next_n_hours(self._filter_length + 1)  # +1 to calculate next hour
         self._state = round(self._compute(prices[:-1]), 3)
         self._next_hour = round(self._compute(prices[1:]), 3)
 
