@@ -14,6 +14,7 @@ FILTER_LENGTH = "filter_length"
 FILTER_TYPE = "filter_type"
 RECTANGLE = "rectangle"
 TRIANGLE = "triangle"
+RANK = "rank"
 UNIT = "unit"
 
 # https://developers.home-assistant.io/docs/development_validation/
@@ -21,7 +22,7 @@ UNIT = "unit"
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
     vol.Required(NORDPOOL_ENTITY): cv.entity_id,
     vol.Optional(FILTER_LENGTH, default=10): vol.All(vol.Coerce(int), vol.Range(min=2, max=20)),
-    vol.Optional(FILTER_TYPE, default=TRIANGLE): vol.In([RECTANGLE, TRIANGLE]),
+    vol.Optional(FILTER_TYPE, default=TRIANGLE): vol.In([RECTANGLE, TRIANGLE, RANK]),
     vol.Optional(UNIT, default="EUR/kWh/h"): cv.string
 })
 
@@ -39,19 +40,30 @@ def setup_platform(
 
     add_entities([NordpoolDiffSensor(nordpool_entity_id, filter_length, filter_type, unit)])
 
+def _with_rank(prices):
+    return 1 - 2 * sorted(prices).index(prices[0]) / (len(prices) - 1)
+
+def _with_filter(filter):
+    return lambda prices : sum([a * b for a, b in zip(prices, filter)])
 
 class NordpoolDiffSensor(SensorEntity):
     _attr_icon = "mdi:flash"
 
     def __init__(self, nordpool_entity_id, filter_length, filter_type, unit):
         self._nordpool_entity_id = nordpool_entity_id
-        self._filter = [-1]
-        if filter_type == TRIANGLE:
+        self._filter_length = filter_length
+        if filter_type == RANK:
+            self._compute = _with_rank
+        elif filter_type == TRIANGLE:
+            filter = [-1]
             triangular_number = (filter_length * (filter_length - 1)) / 2
             for i in range(filter_length - 1, 0, -1):
-                self._filter += [i / triangular_number]
+                filter += [i / triangular_number]
+            self._compute = _with_filter(filter)
         else:  # RECTANGLE
-            self._filter += [1 / (filter_length - 1)] * (filter_length - 1)
+            filter = [-1]
+            filter += [1 / (filter_length - 1)] * (filter_length - 1)
+            self._compute = _with_filter(filter)
         self._attr_native_unit_of_measurement = unit
         self._attr_name = f"nordpool_diff_{filter_type}_{filter_length}"
         # https://developers.home-assistant.io/docs/entity_registry_index/ : Entities should not include the domain in
@@ -69,9 +81,9 @@ class NordpoolDiffSensor(SensorEntity):
         return {"next_hour": self._next_hour}
 
     def update(self):
-        prices = self._get_next_n_hours(len(self._filter) + 1)  # +1 to calculate next hour
-        self._state = round(sum([a * b for a, b in zip(prices, self._filter)]), 3)  # zip cuts off right
-        self._next_hour = round(sum([a * b for a, b in zip(prices[1:], self._filter)]), 3)
+        prices = self._get_next_n_hours(self._filter_length)  # +1 to calculate next hour
+        self._state = round(self._compute(prices[:-1]), 3)
+        self._next_hour = round(self._compute(prices[1:]), 3)
 
     def _get_next_n_hours(self, n):
         np = self.hass.states.get(self._nordpool_entity_id)
