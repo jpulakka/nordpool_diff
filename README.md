@@ -48,7 +48,7 @@ Optional parameters to configure include `filter_length`, `filter_type` and `uni
 `unit` can be any string. The default is EUR/kWh/h to reflect that the sensor output loosely speaking reflects change
 rate (1/h) of hourly price (EUR/kWh).
 
-`filter_length` value must be an integer between 2...20, and `filter_type` must be either `triangle` or `rectangle`.
+`filter_length` value must be an integer between 2...20, and `filter_type` must be either `triangle`, `rectangle` or `rank`.
 They are best explained by examples. For illustrative purposes, the following FIRs have been reflected about the time
 axis; the first multiplier corresponds to current hour and the next multipliers correspond to upcoming hours.
 
@@ -70,6 +70,9 @@ price of the next hour. `filter_type` doesn't make a difference in this case.
 And so on. With rectangle, the right side of the filter is "flat". With triangle, the right side is weighting soon
 upcoming hours more than the farther away "tail" hours. First entry is always -1 and the filter is normalized so that
 its sum is zero. This way the characteristic output magnitude is independent of the settings.
+
+With `filter_type: rank`, the current price is ranked amongst the next `filter_length` prices. The lowest price is given
+a value of `1`, the highest prices is given the value of `-1`, and the other prices are equally distributed in this interval.
 
 You can set up several `nordpool_diff` entities, each with different parameters, plot them in Lovelace, and pick what
 you like best. Here is an example:
