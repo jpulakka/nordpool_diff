@@ -53,7 +53,7 @@ They are best explained by examples. For illustrative purposes, the following FI
 axis; the first multiplier corresponds to current hour and the next multipliers correspond to upcoming hours.
 
 Smallest possible `filter_length: 2` creates FIR `[-1, 1]`. That is, price for the current hour is subtracted from the
-price of the next hour. `filter_type` doesn't make a difference in this case.
+price of the next hour. In this case `filter_type: rectangle` and `filter_type: triangle` are identical.
 
 `filter_length: 3`, `filter_type: rectangle` creates FIR `[-1, 1/2, 1/2]`
 
@@ -71,18 +71,23 @@ And so on. With rectangle, the right side of the filter is "flat". With triangle
 upcoming hours more than the farther away "tail" hours. First entry is always -1 and the filter is normalized so that
 its sum is zero. This way the characteristic output magnitude is independent of the settings.
 
-With `filter_type: rank`, the current price is ranked amongst the next `filter_length` prices. The lowest price is given
-a value of `1`, the highest prices is given the value of `-1`, and the other prices are equally distributed in this interval.
-
 You can set up several `nordpool_diff` entities, each with different parameters, plot them in Lovelace, and pick what
 you like best. Here is an example:
 
 ![Diff example](diff_example.png)
 
+## Rank
+
+With `filter_type: rank`, the current price is ranked amongst the next `filter_length` prices. The lowest price is given
+a value of `1`, the highest prices is given the value of `-1`, and the other prices are equally distributed in this interval.
+
+Since the `rank` output magnitude is always between -1...+1, independent of magnitude of price variation, it may be more appropriate
+(than the linear FIR filters) for simple thresholding and controlling binary things can only be turned on/off, such as water heaters.
+
 ## Attributes
 
 Apart from the principal value, the sensor provides an attribute `next_hour`, which can be useful when we're close to
-hour boundary and making decisions about turning something on; if it's xx:59 and the principal value is above some
+hour boundary and making decisions about turning something on or off; if it's xx:59 and the principal value is above some
 threshold but the next hour value is below the threshold, and we would like to avoid short "on" cycles, then we maybe
 shouldn't turn the thing on at xx:59 if we would turn it off only after 1 minute. This can be avoided by taking the next
 hour value into account.
