@@ -48,9 +48,10 @@ Optional parameters to configure include `filter_length`, `filter_type` and `uni
 `unit` can be any string. The default is EUR/kWh/h to reflect that the sensor output loosely speaking reflects change
 rate (1/h) of hourly price (EUR/kWh).
 
-`filter_length` value must be an integer between 2...20, and `filter_type` must be either `triangle`, `rectangle` or `rank`.
-They are best explained by examples. For illustrative purposes, the following FIRs have been reflected about the time
-axis; the first multiplier corresponds to current hour and the next multipliers correspond to upcoming hours.
+`filter_length` value must be an integer between 2...20, and `filter_type` must be either `triangle`, `rectangle`,
+`rank` or `interval`. They are best explained by examples. For illustrative purposes, the following FIRs have been
+reflected about the time axis; the first multiplier corresponds to current hour and the next multipliers correspond
+to upcoming hours.
 
 Smallest possible `filter_length: 2` creates FIR `[-1, 1]`. That is, price for the current hour is subtracted from the
 price of the next hour. In this case `filter_type: rectangle` and `filter_type: triangle` are identical.
@@ -76,13 +77,23 @@ you like best. Here is an example:
 
 ![Diff example](diff_example.png)
 
-## Rank
+## Rank and interval
 
 With `filter_type: rank`, the current price is ranked amongst the next `filter_length` prices. The lowest price is given
-a value of `1`, the highest prices is given the value of `-1`, and the other prices are equally distributed in this interval.
+a value of `1`, the highest price is given the value of `-1`, and the other prices are equally distributed in this 
+interval.
 
-Since the `rank` output magnitude is always between -1...+1, independent of magnitude of price variation, it may be more appropriate
-(than the linear FIR filters) for simple thresholding and controlling binary things can only be turned on/off, such as water heaters.
+With `filter_type: interval`, the current price is placed inside the interval of the next `filter_length` prices. The
+lowest price is given a value of `1`, the highest price is given the value of `-1`, and the current price is linearly
+placed inside this interval.
+
+If the current price is the lowest or highest price for the next `filter_length` prices, both filter types will output
+`1` or `-1`, respectively.  If the next three prices are `1.4`, `1` and `2`, the `rank` filter will output `0` and the
+`interval` filter will output `0.2`.
+
+Since the output magnitude of the `rank` and `interval` filters are always between -1 and +1, independent of magnitude
+of price variation, it may be more appropriate (than the linear FIR filters) for simple thresholding and controlling
+binary things can only be turned on/off, such as water heaters.
 
 ## Attributes
 
