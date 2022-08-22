@@ -42,9 +42,9 @@ def setup_platform(
     add_entities([NordpoolDiffSensor(nordpool_entity_id, filter_length, filter_type, unit)])
 
 def _with_interval(prices):
-    min = min(prices)
-    max = max(prices)
-    return 1 - 2 * (prices[0]-min)/(max-min)
+    p_min = min(prices)
+    p_max = max(prices)
+    return 1 - 2 * (prices[0]-p_min)/(p_max-p_min)
 
 def _with_rank(prices):
     return 1 - 2 * sorted(prices).index(prices[0]) / (len(prices) - 1)
