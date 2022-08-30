@@ -47,7 +47,10 @@ Optional parameters to configure include `filter_length`, `filter_type` and `uni
 rate (1/h) of hourly price (EUR/kWh).
 
 `filter_length` value must be an integer between 2...20, and `filter_type` must be either `triangle`, `rectangle`,
-`rank` or `interval`. They are best explained by examples.
+`rank` or `interval`. They are best explained by examples. You can set up several `nordpool_diff` entities,
+each with different parameters, plot them in Lovelace, and pick what you like best. Here is an example:
+
+![Diff example](diff_example.png)
 
 ## Triangle and rectangle
 
@@ -76,11 +79,6 @@ price of the next hour. In this case `filter_type: rectangle` and `filter_type: 
 And so on. With rectangle, the right side of the filter is "flat". With triangle, the right side is weighting soon
 upcoming hours more than the farther away "tail" hours. First entry is always -1 and the filter is normalized so that
 its sum is zero. This way the characteristic output magnitude is independent of the settings.
-
-You can set up several `nordpool_diff` entities, each with different parameters, plot them in Lovelace, and pick what
-you like best. Here is an example:
-
-![Diff example](diff_example.png)
 
 ## Rank and interval
 
