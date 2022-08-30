@@ -8,7 +8,7 @@ of a heater so that it will heat more just before prices will go up (to allow he
 and heat less just before prices will go down.
 
 Apart from potentially saving some money, this kind of "temporal shifting of heating" can also save the environment,
-because expensive peaks are produced by dirtier energy sources.
+because expensive peaks are produced by dirtier energy sources. Also helps solving Europe's electricity crisis.
 
 ## Installation
 
