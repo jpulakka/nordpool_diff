@@ -2,12 +2,10 @@
 
 Requires https://github.com/custom-components/nordpool
 
-Applies non-causal FIR differentiator[^1] to [Nord Pool](https://www.nordpoolgroup.com/) spot prices, resulting in a
-predictive sensor that gives positive output when the price of electricity for the current hour is cheaper compared to
-the next few hours (and negative output in the opposite case).
-
-The output can be used for e.g. adjusting target temperature of a heater so that it will heat more just before prices
-will go up (to allow heating less when prices are high), and heat less just before prices will go down.
+[Nord Pool](https://www.nordpoolgroup.com/) gives you spot prices, but making good use of those prices is not easy.
+This custom component provides various algorithms whose output can be used for adjusting for example target temperature
+of a heater so that it will heat more just before prices will go up (to allow heating less when prices are high),
+and heat less just before prices will go down.
 
 Apart from potentially saving some money, this kind of "temporal shifting of heating" can also save the environment,
 because expensive peaks are produced by dirtier energy sources.
@@ -49,9 +47,16 @@ Optional parameters to configure include `filter_length`, `filter_type` and `uni
 rate (1/h) of hourly price (EUR/kWh).
 
 `filter_length` value must be an integer between 2...20, and `filter_type` must be either `triangle`, `rectangle`,
-`rank` or `interval`. They are best explained by examples. For illustrative purposes, the following FIRs have been
-reflected about the time axis; the first multiplier corresponds to current hour and the next multipliers correspond
-to upcoming hours.
+`rank` or `interval`. They are best explained by examples.
+
+## Triangle and rectangle
+
+`filter_type: triangle` `filter_type: rectangle` are linear filters. They apply non-causal FIR differentiator[^1] to spot prices,
+resulting in a predictive sensor that gives positive output when the price of electricity for the current hour is cheaper
+compared to the next few hours (and negative output in the opposite case).
+
+For illustrative purposes, the following FIRs have been reflected about the time axis; the first multiplier corresponds to
+current hour and the next multipliers correspond to upcoming hours.
 
 Smallest possible `filter_length: 2` creates FIR `[-1, 1]`. That is, price for the current hour is subtracted from the
 price of the next hour. In this case `filter_type: rectangle` and `filter_type: triangle` are identical.
