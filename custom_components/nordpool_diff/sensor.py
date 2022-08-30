@@ -15,6 +15,7 @@ FILTER_TYPE = "filter_type"
 RECTANGLE = "rectangle"
 TRIANGLE = "triangle"
 RANK = "rank"
+INTERVAL = "interval"
 UNIT = "unit"
 
 # https://developers.home-assistant.io/docs/development_validation/
@@ -22,7 +23,7 @@ UNIT = "unit"
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
     vol.Required(NORDPOOL_ENTITY): cv.entity_id,
     vol.Optional(FILTER_LENGTH, default=10): vol.All(vol.Coerce(int), vol.Range(min=2, max=20)),
-    vol.Optional(FILTER_TYPE, default=TRIANGLE): vol.In([RECTANGLE, TRIANGLE, RANK]),
+    vol.Optional(FILTER_TYPE, default=TRIANGLE): vol.In([RECTANGLE, TRIANGLE, INTERVAL, RANK]),
     vol.Optional(UNIT, default="EUR/kWh/h"): cv.string
 })
 
@@ -40,6 +41,11 @@ def setup_platform(
 
     add_entities([NordpoolDiffSensor(nordpool_entity_id, filter_length, filter_type, unit)])
 
+def _with_interval(prices):
+    p_min = min(prices)
+    p_max = max(prices)
+    return 1 - 2 * (prices[0]-p_min)/(p_max-p_min)
+
 def _with_rank(prices):
     return 1 - 2 * sorted(prices).index(prices[0]) / (len(prices) - 1)
 
@@ -54,6 +60,8 @@ class NordpoolDiffSensor(SensorEntity):
         self._filter_length = filter_length
         if filter_type == RANK:
             self._compute = _with_rank
+        elif filter_type == INTERVAL:
+            self._compute = _with_interval
         elif filter_type == TRIANGLE:
             filter = [-1]
             triangular_number = (filter_length * (filter_length - 1)) / 2
