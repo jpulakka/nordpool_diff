@@ -51,7 +51,7 @@ rate (1/h) of hourly price (EUR/kWh).
 
 ## Triangle and rectangle
 
-`filter_type: triangle` `filter_type: rectangle` are linear filters. They apply non-causal FIR differentiator[^1] to spot prices,
+`filter_type: triangle` and `filter_type: rectangle` are linear filters. They apply non-causal FIR differentiator[^1] to spot prices,
 resulting in a predictive sensor that gives positive output when the price of electricity for the current hour is cheaper
 compared to the next few hours (and negative output in the opposite case).
 
