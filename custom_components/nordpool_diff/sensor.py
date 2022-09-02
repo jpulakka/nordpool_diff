@@ -16,6 +16,9 @@ RECTANGLE = "rectangle"
 TRIANGLE = "triangle"
 RANK = "rank"
 INTERVAL = "interval"
+NORMALIZE = "normalize"
+NO = "no"
+MAX = "max"
 UNIT = "unit"
 
 # https://developers.home-assistant.io/docs/development_validation/
@@ -24,6 +27,7 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
     vol.Required(NORDPOOL_ENTITY): cv.entity_id,
     vol.Optional(FILTER_LENGTH, default=10): vol.All(vol.Coerce(int), vol.Range(min=2, max=20)),
     vol.Optional(FILTER_TYPE, default=TRIANGLE): vol.In([RECTANGLE, TRIANGLE, INTERVAL, RANK]),
+    vol.Optional(NORMALIZE, default=NO): vol.In([NO, MAX]),
     vol.Optional(UNIT, default="EUR/kWh/h"): cv.string
 })
 
@@ -37,9 +41,10 @@ def setup_platform(
     nordpool_entity_id = config[NORDPOOL_ENTITY]
     filter_length = config[FILTER_LENGTH]
     filter_type = config[FILTER_TYPE]
+    normalize = config[NORMALIZE]
     unit = config[UNIT]
 
-    add_entities([NordpoolDiffSensor(nordpool_entity_id, filter_length, filter_type, unit)])
+    add_entities([NordpoolDiffSensor(nordpool_entity_id, filter_length, filter_type, normalize, unit)])
 
 def _with_interval(prices):
     p_min = min(prices)
@@ -49,15 +54,19 @@ def _with_interval(prices):
 def _with_rank(prices):
     return 1 - 2 * sorted(prices).index(prices[0]) / (len(prices) - 1)
 
-def _with_filter(filter):
-    return lambda prices : sum([a * b for a, b in zip(prices, filter)])
+def _with_filter(filter, normalize):
+    return lambda prices : sum([a * b for a, b in zip(prices, filter)]) * normalize(prices)
 
 class NordpoolDiffSensor(SensorEntity):
     _attr_icon = "mdi:flash"
 
-    def __init__(self, nordpool_entity_id, filter_length, filter_type, unit):
+    def __init__(self, nordpool_entity_id, filter_length, filter_type, normalize, unit):
         self._nordpool_entity_id = nordpool_entity_id
         self._filter_length = filter_length
+        if normalize == MAX:
+            normalize = lambda prices : 1 / max(prices)
+        else:  # NO
+            normalize = lambda prices : 1
         if filter_type == RANK:
             self._compute = _with_rank
         elif filter_type == INTERVAL:
@@ -67,11 +76,11 @@ class NordpoolDiffSensor(SensorEntity):
             triangular_number = (filter_length * (filter_length - 1)) / 2
             for i in range(filter_length - 1, 0, -1):
                 filter += [i / triangular_number]
-            self._compute = _with_filter(filter)
+            self._compute = _with_filter(filter, normalize)
         else:  # RECTANGLE
             filter = [-1]
             filter += [1 / (filter_length - 1)] * (filter_length - 1)
-            self._compute = _with_filter(filter)
+            self._compute = _with_filter(filter, normalize)
         self._attr_native_unit_of_measurement = unit
         self._attr_name = f"nordpool_diff_{filter_type}_{filter_length}"
         # https://developers.home-assistant.io/docs/entity_registry_index/ : Entities should not include the domain in
