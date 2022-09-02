@@ -65,8 +65,10 @@ class NordpoolDiffSensor(SensorEntity):
         self._filter_length = filter_length
         if normalize == MAX:
             normalize = lambda prices : 1 / max(prices)
+            normalize_suffix = "_normalize_max"
         else:  # NO
             normalize = lambda prices : 1
+            normalize_suffix = ""
         if filter_type == RANK:
             self._compute = _with_rank
         elif filter_type == INTERVAL:
@@ -82,10 +84,10 @@ class NordpoolDiffSensor(SensorEntity):
             filter += [1 / (filter_length - 1)] * (filter_length - 1)
             self._compute = _with_filter(filter, normalize)
         self._attr_native_unit_of_measurement = unit
-        self._attr_name = f"nordpool_diff_{filter_type}_{filter_length}"
+        self._attr_name = f"nordpool_diff_{filter_type}_{filter_length}{normalize_suffix}"
         # https://developers.home-assistant.io/docs/entity_registry_index/ : Entities should not include the domain in
         # their Unique ID as the system already accounts for these identifiers:
-        self._attr_unique_id = f"{filter_type}_{filter_length}_{unit}"
+        self._attr_unique_id = f"{filter_type}_{filter_length}_{unit}{normalize_suffix}"
         self._state = self._next_hour = STATE_UNKNOWN
 
     @property
