@@ -80,6 +80,20 @@ And so on. With rectangle, the right side of the filter is "flat". With triangle
 upcoming hours more than the farther away "tail" hours. First entry is always -1 and the filter is normalized so that
 its sum is zero. This way the characteristic output magnitude is independent of the settings.
 
+### Normalize
+
+With linear filters `filter_type: triangle` and `filter_type: rectangle`, magnitude of output is proportional to
+magnitude of input = price (variations) of electricity. Between 2021-2022, that has increased tenfold, so the characteristic
+output magnitude of the filter has also increased tenfold. That causes problems in proportional controllers; if a heater target
+used to be adjusted roughly +-2 deg C, it's not reasonable for that to become +-20 deg C, no matter how the electricity prices evolve.
+
+To compensate for that, `normalize: max` was introduced. By adding that, output of the filter is divided by maximum price of
+the next `filter_length` hours (including current hour). That works reasonably when `filter_length` is 10 or more, making the overall
+output magnitude less dependent of "typical current average" electricity price. This might fail spectacularly if price is very low
+for long time.
+
+More normalization strategies might be introduced later.
+
 ## Rank and interval
 
 With `filter_type: rank`, the current price is ranked amongst the next `filter_length` prices. The lowest price is given
@@ -96,7 +110,8 @@ If the current price is the lowest or highest price for the next `filter_length`
 
 Since the output magnitude of the `rank` and `interval` filters are always between -1 and +1, independent of magnitude
 of price variation, it may be more appropriate (than the linear FIR filters) for simple thresholding and controlling
-binary things can only be turned on/off, such as water heaters.
+binary things can only be turned on/off, such as water heaters. `normalize` setting has no effect on `rank` nor `interval`.
+
 
 ## Attributes
 
