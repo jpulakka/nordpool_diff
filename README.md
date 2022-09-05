@@ -31,8 +31,8 @@ because expensive peaks are produced by dirtier energy sources. Also helps solvi
 
 ## Optional parameters
 
-Optional parameters to configure include `filter_length`, `filter_type` and `unit`, defaults are `10`, `triangle` and
-`EUR/kWh/h`, respectively:
+Optional parameters to configure include `filter_length`, `filter_type`, `unit` and `normalize`, defaults are `10`, `triangle`,
+`EUR/kWh/h` and `no`, respectively:
 
  ```yaml
  sensor:
@@ -41,6 +41,7 @@ Optional parameters to configure include `filter_length`, `filter_type` and `uni
      filter_length: 10
      filter_type: triangle
      unit: EUR/kWh/h
+     normalize: no
  ```
 
 `unit` can be any string. The default is EUR/kWh/h to reflect that the sensor output loosely speaking reflects change
@@ -88,7 +89,7 @@ output magnitude of the filter has also increased tenfold. That causes problems 
 used to be adjusted roughly +-2 deg C, it's not reasonable for that to become +-20 deg C, no matter how the electricity prices evolve.
 
 To compensate for that, `normalize: max` was introduced. By adding that, output of the filter is divided by maximum price of
-the next `filter_length` hours (including current hour). That works reasonably when `filter_length` is 10 or more, making the overall
+the next `filter_length` hours (including current hour). This works reasonably when `filter_length` is 10 or more, making the overall
 output magnitude less dependent of "typical current average" electricity price. This might fail spectacularly if price is very low
 for long time.
 
