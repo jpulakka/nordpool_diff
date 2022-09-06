@@ -3,11 +3,11 @@
 Requires https://github.com/custom-components/nordpool
 
 [Nord Pool](https://www.nordpoolgroup.com/) gives you spot prices, but making good use of those prices is not easy.
-This custom component provides various algorithms whose output can be used for deciding when to turn water heater or
+This component provides various algorithms whose output can be used for deciding when to turn water heater or
 car charger on/off, or for adjusting target temperature of a heater so that it will heat more just before prices
 will go up (to allow heating less when prices are high), and heat less just before prices will go down.
 
-Apart from potentially saving some money, this kind of temporal shifting of heating can also save the environment,
+Apart from potentially saving some money, this kind of temporal shifting of consumption can also save the environment,
 because expensive peaks are produced by dirtier energy sources. Also helps solving Europe's electricity crisis.
 
 ## Installation
@@ -111,7 +111,6 @@ If the current price is the lowest or highest price for the next `filter_length`
 Since the output magnitude of the `rank` and `interval` filters are always between -1 and +1, independent of magnitude
 of price variation, it may be more appropriate (than the linear FIR filters) for simple thresholding and controlling
 binary things can only be turned on/off, such as water heaters. `normalize` setting has no effect on `rank` nor `interval`.
-
 
 ## Attributes
 
