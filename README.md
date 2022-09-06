@@ -3,11 +3,11 @@
 Requires https://github.com/custom-components/nordpool
 
 [Nord Pool](https://www.nordpoolgroup.com/) gives you spot prices, but making good use of those prices is not easy.
-This custom component provides various algorithms whose output can be used for adjusting for example target temperature
-of a heater so that it will heat more just before prices will go up (to allow heating less when prices are high),
-and heat less just before prices will go down.
+This custom component provides various algorithms whose output can be used for deciding when to turn water heater or
+car charger on/off, or adjusting for example target temperature of a heater so that it will heat more just before prices
+will go up (to allow heating less when prices are high), and heat less just before prices will go down.
 
-Apart from potentially saving some money, this kind of "temporal shifting of heating" can also save the environment,
+Apart from potentially saving some money, this kind of temporal shifting of heating can also save the environment,
 because expensive peaks are produced by dirtier energy sources. Also helps solving Europe's electricity crisis.
 
 ## Installation
@@ -91,7 +91,7 @@ used to be adjusted roughly +-2 deg C, it's not reasonable for that to become +-
 To compensate for that, `normalize` was introduced. Current options include `normalize: no` (no normalization, default),
 `normalize: max` (output of the filter is divided by maximum price of the next `filter_length` hours), and `normalize: max_min`
 (output of the filter is divided by maximum minus minimum price of the next `filter_length` hours). These work reasonably when
-`filter_length` is 10 or more, making the overall output magnitude less dependent of current overall electricity price.
+`filter_length` is 10 or more, making the output magnitude less dependent of current overall electricity price.
 And might fail spectacularly if price or its variation is very low for long time.
 
 ## Rank and interval
