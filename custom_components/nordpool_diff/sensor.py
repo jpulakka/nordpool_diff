@@ -28,7 +28,7 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
     vol.Required(NORDPOOL_ENTITY): cv.entity_id,
     vol.Optional(FILTER_LENGTH, default=10): vol.All(vol.Coerce(int), vol.Range(min=2, max=20)),
     vol.Optional(FILTER_TYPE, default=TRIANGLE): vol.In([RECTANGLE, TRIANGLE, INTERVAL, RANK]),
-    vol.Optional(NORMALIZE, default=NO): vol.In([NO, MAX]),
+    vol.Optional(NORMALIZE, default=NO): vol.In([NO, MAX, MAX_MIN]),
     vol.Optional(UNIT, default="EUR/kWh/h"): cv.string
 })
 
