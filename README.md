@@ -88,10 +88,11 @@ magnitude of input = price (variations) of electricity. Between 2021-2022, that 
 output magnitude of the filter has also increased tenfold. That causes problems in proportional controllers; if a heater target
 used to be adjusted roughly +-2 deg C, it's not reasonable for that to become +-20 deg C, no matter how the electricity prices evolve.
 
-To compensate for that, `normalize: max` was introduced. By adding that, output of the filter is divided by maximum price of
-the next `filter_length` hours (including current hour). This works reasonably when `filter_length` is 10 or more, making the overall
-output magnitude less dependent of "typical current average" electricity price. This might fail spectacularly if price is very low
-for long time.
+To compensate for that, `normalize` was introduced. Current options include `normalize: no` (no normalization, default),
+`normalize: max` (output of the filter is divided by maximum price of the next `filter_length` hours), and `normalize: max_min`
+(output of the filter is divided by maximum minus minimum price of the next `filter_length` hours). These work reasonably when
+`filter_length` is 10 or more, making the overall output magnitude less dependent of "typical current average" electricity price.
+And might fail spectacularly if price or its variation is very low for long time.
 
 More normalization strategies might be introduced later.
 
