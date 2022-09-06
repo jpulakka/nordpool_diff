@@ -3,11 +3,11 @@
 Requires https://github.com/custom-components/nordpool
 
 [Nord Pool](https://www.nordpoolgroup.com/) gives you spot prices, but making good use of those prices is not easy.
-This custom component provides various algorithms whose output can be used for adjusting for example target temperature
-of a heater so that it will heat more just before prices will go up (to allow heating less when prices are high),
-and heat less just before prices will go down.
+This component provides various algorithms whose output can be used for deciding when to turn water heater or
+car charger on/off, or for adjusting target temperature of a heater so that it will heat more just before prices
+will go up (to allow heating less when prices are high), and heat less just before prices will go down.
 
-Apart from potentially saving some money, this kind of "temporal shifting of heating" can also save the environment,
+Apart from potentially saving some money, this kind of temporal shifting of consumption can also save the environment,
 because expensive peaks are produced by dirtier energy sources. Also helps solving Europe's electricity crisis.
 
 ## Installation
@@ -31,8 +31,8 @@ because expensive peaks are produced by dirtier energy sources. Also helps solvi
 
 ## Optional parameters
 
-Optional parameters to configure include `filter_length`, `filter_type` and `unit`, defaults are `10`, `triangle` and
-`EUR/kWh/h`, respectively:
+Optional parameters to configure include `filter_length`, `filter_type`, `unit` and `normalize`, defaults are `10`, `triangle`,
+`EUR/kWh/h` and `no`, respectively:
 
  ```yaml
  sensor:
@@ -41,6 +41,7 @@ Optional parameters to configure include `filter_length`, `filter_type` and `uni
      filter_length: 10
      filter_type: triangle
      unit: EUR/kWh/h
+     normalize: no
  ```
 
 `unit` can be any string. The default is EUR/kWh/h to reflect that the sensor output loosely speaking reflects change
@@ -80,6 +81,19 @@ And so on. With rectangle, the right side of the filter is "flat". With triangle
 upcoming hours more than the farther away "tail" hours. First entry is always -1 and the filter is normalized so that
 its sum is zero. This way the characteristic output magnitude is independent of the settings.
 
+### Normalize
+
+With linear filters `filter_type: triangle` and `filter_type: rectangle`, magnitude of output is proportional to
+magnitude of input = price (variations) of electricity. Between 2021-2022, that has increased tenfold, so the characteristic
+output magnitude of the filter has also increased tenfold. That causes problems in proportional controllers; if a heater target
+used to be adjusted roughly +-2 deg C, it's not reasonable for that to become +-20 deg C, no matter how the electricity prices evolve.
+
+To compensate for that, `normalize` was introduced. Current options include `normalize: no` (no normalization, default),
+`normalize: max` (output of the filter is divided by maximum price of the next `filter_length` hours), and `normalize: max_min`
+(output of the filter is divided by maximum minus minimum price of the next `filter_length` hours). These work reasonably when
+`filter_length` is 10 or more, making the output magnitude less dependent of current overall electricity price.
+And might fail spectacularly if price or its variation is very low for long time.
+
 ## Rank and interval
 
 With `filter_type: rank`, the current price is ranked amongst the next `filter_length` prices. The lowest price is given
@@ -96,7 +110,7 @@ If the current price is the lowest or highest price for the next `filter_length`
 
 Since the output magnitude of the `rank` and `interval` filters are always between -1 and +1, independent of magnitude
 of price variation, it may be more appropriate (than the linear FIR filters) for simple thresholding and controlling
-binary things can only be turned on/off, such as water heaters.
+binary things can only be turned on/off, such as water heaters. `normalize` setting has no effect on `rank` nor `interval`.
 
 ## Attributes
 
