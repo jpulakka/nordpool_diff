@@ -4,7 +4,7 @@ Requires https://github.com/custom-components/nordpool
 
 [Nord Pool](https://www.nordpoolgroup.com/) gives you spot prices, but making good use of those prices is not easy.
 This custom component provides various algorithms whose output can be used for deciding when to turn water heater or
-car charger on/off, or adjusting for example target temperature of a heater so that it will heat more just before prices
+car charger on/off, or for adjusting target temperature of a heater so that it will heat more just before prices
 will go up (to allow heating less when prices are high), and heat less just before prices will go down.
 
 Apart from potentially saving some money, this kind of temporal shifting of heating can also save the environment,
