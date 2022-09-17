@@ -65,10 +65,10 @@ class NordpoolDiffSensor(SensorEntity):
         self._nordpool_entity_id = nordpool_entity_id
         self._filter_length = filter_length
         if normalize == MAX:
-            normalize = lambda prices : 1 / max(prices)
+            normalize = lambda prices : 1 / (max(prices) if max(prices) > 0 else 1)
             normalize_suffix = "_normalize_max"
         elif normalize == MAX_MIN:
-            normalize = lambda prices : 1 / (max(prices) - min(prices))
+            normalize = lambda prices : 1 / (max(prices) - min(prices) if max(prices) - min(prices) > 0 else 1)
             normalize_suffix = "_normalize_max_min"
         else:  # NO
             normalize = lambda prices : 1

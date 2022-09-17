@@ -92,7 +92,6 @@ To compensate for that, `normalize` was introduced. Current options include `nor
 `normalize: max` (output of the filter is divided by maximum price of the next `filter_length` hours), and `normalize: max_min`
 (output of the filter is divided by maximum minus minimum price of the next `filter_length` hours). These work reasonably when
 `filter_length` is 10 or more, making the output magnitude less dependent of current overall electricity price.
-And might fail spectacularly if price or its variation is very low for long time.
 
 ## Rank and interval
 
