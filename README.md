@@ -12,6 +12,15 @@ because expensive peaks are produced by dirtier energy sources. Also helps solvi
 
 ## Installation
 
+### Option 1: HACS
+1. Go to HACS -> Integrations
+2. Click the three dots on the top right and select `Custom Repositories`
+3. Enter `https://github.com/jpulakka/nordpool_diff` as repository, select the category `Integration` and click Add
+4. A new custom integration shows up for installation (Nordpool Diff) - install it
+5. Restart Home Assistant
+
+### Option 2: Manual
+
 1. Install and configure https://github.com/custom-components/nordpool first.
 2. Copy the `nordpool_diff` folder to HA `<config_dir>/custom_components/nordpool_diff/`
 3. Restart HA. (Skipping restarting before modifying configuration would give "Integration 'nordpool_diff' not found"
@@ -97,7 +106,7 @@ And might fail spectacularly if price or its variation is very low for long time
 ## Rank and interval
 
 With `filter_type: rank`, the current price is ranked amongst the next `filter_length` prices. The lowest price is given
-a value of `1`, the highest price is given the value of `-1`, and the other prices are equally distributed in this 
+a value of `1`, the highest price is given the value of `-1`, and the other prices are equally distributed in this
 interval.
 
 With `filter_type: interval`, the current price is placed inside the interval of the next `filter_length` prices. The
