@@ -10,6 +10,12 @@ will go up (to allow heating less when prices are high), and heat less just befo
 Apart from potentially saving some money, this kind of temporal shifting of consumption can also save the environment,
 because expensive peaks are produced by dirtier energy sources. Also helps solving Europe's electricity crisis.
 
+The output is most suitable for fine-tuning continuously adjustable things (thermostats), or it can be thresholded
+to control binary things that can be switched on/off anytime, such as water heaters. So far it is not directly
+suitable for controlling things that require X contiguous hours to work, such as washing machines. Also, there are
+no guarantees about how many hours per day the output will stay above some threshold (even if typical price variations
+may make the output typically behave this or that way most of the time).
+
 ## Installation
 
 ### Option 1: HACS
