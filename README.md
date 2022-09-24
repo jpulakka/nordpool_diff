@@ -2,7 +2,7 @@
 
 Requires https://github.com/custom-components/nordpool
 
-[Nord Pool](https://www.nordpoolgroup.com/) gives you spot prices, but making good use of those prices is not easy.
+[Nord Pool](https://www.nordpoolgroup.com/) gives you spot prices[^1], but making good use of those prices is not easy.
 This component provides various algorithms whose output can be used for deciding when to turn water heater or
 car charger on/off, or for adjusting target temperature of a heater so that it will heat more just before prices
 will go up (to allow heating less when prices are high), and heat less just before prices will go down.
@@ -70,7 +70,7 @@ each with different parameters, plot them in Lovelace, and pick what you like be
 
 ## Triangle and rectangle
 
-`filter_type: triangle` and `filter_type: rectangle` are linear filters. They apply non-causal FIR differentiator[^1] to spot prices,
+`filter_type: triangle` and `filter_type: rectangle` are linear filters. They apply non-causal FIR differentiator[^2] to spot prices,
 resulting in a predictive sensor that gives positive output when the price of electricity for the current hour is cheaper
 compared to the next few hours (and negative output in the opposite case).
 
@@ -134,5 +134,10 @@ threshold but the next hour value is below the threshold, and we would like to a
 shouldn't turn the thing on at xx:59 if we would turn it off only after 1 minute. This can be avoided by taking the next
 hour value into account.
 
-[^1]: Fancy way of saying that the price for the current hour is subtracted from the average price for the next few
+[^1]: Although, [Nord Pool API documentation](https://www.nordpoolgroup.com/en/trading/api/) says
+_If you are a Nord Pool customer, using our trading APIs is for free. All others must become a customer to use our APIs._
+Regardless, the API is technically public and appears to work without any tokens.
+[ENTSO-E](https://transparency.entsoe.eu/) would be the correct place to fetch the prices from, but there
+doesn't seem to be a HASS integration for that so far.
+[^2]: Fancy way of saying that the price for the current hour is subtracted from the average price for the next few
 hours.
