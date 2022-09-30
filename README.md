@@ -31,7 +31,10 @@ may make the output typically behave this or that way most of the time.
 2. Copy the `nordpool_diff` folder to HA `<config_dir>/custom_components/nordpool_diff/`
 3. Restart HA. (Skipping restarting before modifying configuration would give "Integration 'nordpool_diff' not found"
    error message from the configuration.)
-4. Add the following to your `configuration.yaml` file:
+   
+## Configuration
+   
+1. Add the following to your `configuration.yaml` file:
 
     ```yaml
     sensor:
@@ -41,7 +44,7 @@ may make the output typically behave this or that way most of the time.
 
    Modify the `nordpool_entity` value according to your exact nordpool entity ID.
 
-5. Restart HA again to load the configuration. Now you should see `nordpool_diff_triangle_10` sensor, where
+2. Restart HA again to load the configuration. Now you should see `nordpool_diff_triangle_10` sensor, where
    the `triangle_10` part corresponds to default values of optional parameters, explained below.
 
 ## Optional parameters
