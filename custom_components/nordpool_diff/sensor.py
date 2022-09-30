@@ -50,8 +50,9 @@ def setup_platform(
 def _with_interval(prices):
     p_min = min(prices)
     p_max = max(prices)
-    divisor = p_max - p_min if p_max - p_min > 0 else 1
-    return 1 - 2 * (prices[0]-p_min)/divisor
+    if not p_max > p_min:
+        return 0
+    return 1 - 2 * (prices[0]-p_min)/(p_max-p_min)
 
 def _with_rank(prices):
     return 1 - 2 * sorted(prices).index(prices[0]) / (len(prices) - 1)
