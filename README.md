@@ -18,6 +18,8 @@ may make the output typically behave this or that way most of the time.
 
 ## Installation
 
+Install and configure https://github.com/custom-components/nordpool first.
+
 ### Option 1: HACS
 1. Go to HACS -> Integrations
 2. Click the three dots on the top right and select `Custom Repositories`
@@ -26,14 +28,12 @@ may make the output typically behave this or that way most of the time.
 5. Restart Home Assistant
 
 ### Option 2: Manual
-
-1. Install and configure https://github.com/custom-components/nordpool first.
-2. Copy the `nordpool_diff` folder to HA `<config_dir>/custom_components/nordpool_diff/`
-3. Restart HA. (Skipping restarting before modifying configuration would give "Integration 'nordpool_diff' not found"
+1. Copy the `nordpool_diff` folder to HA `<config_dir>/custom_components/nordpool_diff/`
+2. Restart HA. (Skipping restarting before modifying configuration would give "Integration 'nordpool_diff' not found"
    error message from the configuration.)
    
 ## Configuration
-   
+
 1. Add the following to your `configuration.yaml` file:
 
     ```yaml
