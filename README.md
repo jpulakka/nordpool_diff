@@ -137,10 +137,12 @@ threshold but the next hour value is below the threshold, and we would like to a
 shouldn't turn the thing on at xx:59 if we would turn it off only after 1 minute. This can be avoided by taking the next
 hour value into account.
 
-[^1]: Although, [Nord Pool API documentation](https://www.nordpoolgroup.com/en/trading/api/) says
+[^1]: [Nord Pool API documentation](https://www.nordpoolgroup.com/en/trading/api/) states
 _If you are a Nord Pool customer, using our trading APIs is for free. All others must become a customer to use our APIs._
 Regardless, the API is technically public and appears to work without any tokens.
-[ENTSO-E](https://transparency.entsoe.eu/) would be the correct place to fetch the prices from, but there
-doesn't seem to be a HASS integration for that so far.
+[ENTSO-E](https://transparency.entsoe.eu/) would be the correct place to fetch the prices from, and now (10/2022)
+there's also a HASS integration for that: https://github.com/JaccoR/hass-entso-e . That will be integrated in 
+https://github.com/jpulakka/nordpool_diff/issues/21
+
 [^2]: Fancy way of saying that the price for the current hour is subtracted from the average price for the next few
 hours.
