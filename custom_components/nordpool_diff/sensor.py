@@ -119,34 +119,34 @@ class NordpoolDiffSensor(SensorEntity):
         # Prefer entsoe, fallback to nordpool:
         prices = []
         if e := self.hass.states.get(self._entsoe_entity_id):
-            prices = self._get_next_n_hours_from_entsoe(n, e)
+            prices = _get_next_n_hours_from_entsoe(n, e)
         if (len(prices) < n) and (np := self.hass.states.get(self._nordpool_entity_id)):
-            np_prices = self._get_next_n_hours_from_nordpool(n, np)
+            np_prices = _get_next_n_hours_from_nordpool(n, np)
             if len(np_prices) > len(prices):
                 prices = np_prices
         # Pad if needed, using last element:
         prices = prices + (n - len(prices)) * [prices[-1]]
         return prices
 
-    def _get_next_n_hours_from_nordpool(n, np):
-        prices = np.attributes["today"]
-        hour = dt.now().hour
-        # Get tomorrow if needed:
-        if len(prices) < hour + n and np.attributes["tomorrow_valid"]:
-            prices = prices + np.attributes["tomorrow"]
-        # Nordpool sometimes returns null prices, https://github.com/custom-components/nordpool/issues/125
-        # The nulls are typically at (tail of) "tomorrow", so simply removing them is reasonable:
-        prices = [x for x in prices if x is not None]
-        return prices[hour: hour + n]
+def _get_next_n_hours_from_nordpool(n, np):
+    prices = np.attributes["today"]
+    hour = dt.now().hour
+    # Get tomorrow if needed:
+    if len(prices) < hour + n and np.attributes["tomorrow_valid"]:
+        prices = prices + np.attributes["tomorrow"]
+    # Nordpool sometimes returns null prices, https://github.com/custom-components/nordpool/issues/125
+    # The nulls are typically at (tail of) "tomorrow", so simply removing them is reasonable:
+    prices = [x for x in prices if x is not None]
+    return prices[hour: hour + n]
 
-    def _get_next_n_hours_from_entsoe(n, e):
-        if not (p := e.attributes["prices"]):
-            return []
-        prices = []
-        hour_before_now = dt.utcnow() - timedelta(hours=1)
-        for item in p:
-            if prices or hour_before_now < datetime.fromisoformat(item["time"]):
-                prices.append(item["price"])
-                if len(prices) == n:
-                    break
-        return prices
+def _get_next_n_hours_from_entsoe(n, e):
+    if not (p := e.attributes["prices"]):
+        return []
+    prices = []
+    hour_before_now = dt.utcnow() - timedelta(hours=1)
+    for item in p:
+        if prices or hour_before_now < datetime.fromisoformat(item["time"]):
+            prices.append(item["price"])
+            if len(prices) == n:
+                break
+    return prices
