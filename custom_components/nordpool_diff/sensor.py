@@ -139,14 +139,14 @@ def _get_next_n_hours_from_nordpool(n, np):
     prices = [x for x in prices if x is not None]
     return prices[hour: hour + n]
 
+
 def _get_next_n_hours_from_entsoe(n, e):
-    if not (p := e.attributes["prices"]):
-        return []
     prices = []
-    hour_before_now = dt.utcnow() - timedelta(hours=1)
-    for item in p:
-        if prices or hour_before_now < datetime.fromisoformat(item["time"]):
-            prices.append(item["price"])
-            if len(prices) == n:
-                break
+    if p := e.attributes["prices"]:
+        hour_before_now = dt.utcnow() - timedelta(hours=1)
+        for item in p:
+            if prices or hour_before_now < datetime.fromisoformat(item["time"]):
+                prices.append(item["price"])
+                if len(prices) == n:
+                    break
     return prices
