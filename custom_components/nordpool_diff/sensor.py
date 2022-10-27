@@ -147,13 +147,12 @@ class NordpoolDiffSensor(SensorEntity):
         if e := self.hass.states.get(self._entsoe_entity_id):
             prices = _get_next_n_hours_from_entsoe(n, e)
             _LOGGER.debug(f"{n} prices from entsoe {prices}")
-        # FIXME the True below only for temporary debugging, remove!
-        if (True or (len(prices) < n)) and (np := self.hass.states.get(self._nordpool_entity_id)):
+        if (len(prices) < n) and (np := self.hass.states.get(self._nordpool_entity_id)):
             np_prices = _get_next_n_hours_from_nordpool(n, np)
             _LOGGER.debug(f"{n} prices from nordpool {np_prices}")
             if len(np_prices) > len(prices):
                 prices = np_prices
-        # Pad if needed, using last element:
+        # Pad if needed, using last element. FIXME what to do if prices is totally empty, then even prices[-1] fails?
         prices = prices + (n - len(prices)) * [prices[-1]]
         _LOGGER.debug(f"{n} prices after padding {prices}")
         return prices
