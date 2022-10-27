@@ -8,8 +8,10 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 from homeassistant.util import dt
+from datetime import datetime, timedelta
 
 NORDPOOL_ENTITY = "nordpool_entity"
+ENTSOE_ENTITY = "entsoe_entity"
 FILTER_LENGTH = "filter_length"
 FILTER_TYPE = "filter_type"
 RECTANGLE = "rectangle"
@@ -25,10 +27,11 @@ UNIT = "unit"
 # https://developers.home-assistant.io/docs/development_validation/
 # https://github.com/home-assistant/core/blob/dev/homeassistant/helpers/config_validation.py
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
-    vol.Required(NORDPOOL_ENTITY): cv.entity_id,
-    vol.Optional(FILTER_LENGTH, default=10): vol.All(vol.Coerce(int), vol.Range(min=2, max=20)),
+    vol.Optional(NORDPOOL_ENTITY, default=None): cv.entity_id,  # Is there a way to require EITHER nordpool OR entsoe?
+    vol.Optional(ENTSOE_ENTITY, default="sensor.current_electricity_market_price"): cv.entity_id,  # hass-entso-e's default entity id
+    vol.Optional(FILTER_LENGTH, default=12): vol.All(vol.Coerce(int), vol.Range(min=2, max=20)),
     vol.Optional(FILTER_TYPE, default=TRIANGLE): vol.In([RECTANGLE, TRIANGLE, INTERVAL, RANK]),
-    vol.Optional(NORMALIZE, default=NO): vol.In([NO, MAX, MAX_MIN]),
+    vol.Optional(NORMALIZE, default=MAX_MIN): vol.In([NO, MAX, MAX_MIN]),
     vol.Optional(UNIT, default="EUR/kWh/h"): cv.string
 })
 
@@ -40,12 +43,13 @@ def setup_platform(
         discovery_info: DiscoveryInfoType | None = None
 ) -> None:
     nordpool_entity_id = config[NORDPOOL_ENTITY]
+    entsoe_entity_id = config[ENTSOE_ENTITY]
     filter_length = config[FILTER_LENGTH]
     filter_type = config[FILTER_TYPE]
     normalize = config[NORMALIZE]
     unit = config[UNIT]
 
-    add_entities([NordpoolDiffSensor(nordpool_entity_id, filter_length, filter_type, normalize, unit)])
+    add_entities([NordpoolDiffSensor(nordpool_entity_id, entsoe_entity_id, filter_length, filter_type, normalize, unit)])
 
 def _with_interval(prices):
     p_min = min(prices)
@@ -63,8 +67,9 @@ def _with_filter(filter, normalize):
 class NordpoolDiffSensor(SensorEntity):
     _attr_icon = "mdi:flash"
 
-    def __init__(self, nordpool_entity_id, filter_length, filter_type, normalize, unit):
+    def __init__(self, nordpool_entity_id, entsoe_entity_id, filter_length, filter_type, normalize, unit):
         self._nordpool_entity_id = nordpool_entity_id
+        self._entsoe_entity_id = entsoe_entity_id
         self._filter_length = filter_length
         if normalize == MAX:
             normalize = lambda prices : 1 / (max(prices) if max(prices) > 0 else 1)
@@ -111,7 +116,19 @@ class NordpoolDiffSensor(SensorEntity):
         self._next_hour = round(self._compute(prices[1:]), 3)
 
     def _get_next_n_hours(self, n):
-        np = self.hass.states.get(self._nordpool_entity_id)
+        # Prefer entsoe, fallback to nordpool:
+        prices = []
+        if e := self.hass.states.get(self._entsoe_entity_id):
+            prices = self._get_next_n_hours_from_entsoe(n, e)
+        if (len(prices) < n) and (np := self.hass.states.get(self._nordpool_entity_id)):
+            np_prices = self._get_next_n_hours_from_nordpool(n, np)
+            if len(np_prices) > len(prices):
+                prices = np_prices
+        # Pad if needed, using last element:
+        prices = prices + (n - len(prices)) * [prices[-1]]
+        return prices
+
+    def _get_next_n_hours_from_nordpool(n, np):
         prices = np.attributes["today"]
         hour = dt.now().hour
         # Get tomorrow if needed:
@@ -120,6 +137,16 @@ class NordpoolDiffSensor(SensorEntity):
         # Nordpool sometimes returns null prices, https://github.com/custom-components/nordpool/issues/125
         # The nulls are typically at (tail of) "tomorrow", so simply removing them is reasonable:
         prices = [x for x in prices if x is not None]
-        # Pad if needed, using last element:
-        prices = prices + (hour + n - len(prices)) * [prices[-1]]
         return prices[hour: hour + n]
+
+    def _get_next_n_hours_from_entsoe(n, e):
+        if not (p := e.attributes["prices"]):
+            return []
+        prices = []
+        hour_before_now = dt.utcnow() - timedelta(hours=1)
+        for item in p:
+            if prices or hour_before_now < datetime.fromisoformat(item["time"]):
+                prices.append(item["price"])
+                if len(prices) == n:
+                    break
+        return prices
