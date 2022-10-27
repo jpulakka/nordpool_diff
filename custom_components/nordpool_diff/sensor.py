@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import logging
 import voluptuous as vol
 import homeassistant.helpers.config_validation as cv
 from homeassistant.components.sensor import PLATFORM_SCHEMA, SensorEntity
@@ -9,6 +10,8 @@ from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 from homeassistant.util import dt
 from datetime import datetime, timedelta
+
+_LOGGER = logging.getLogger(__name__)
 
 NORDPOOL_ENTITY = "nordpool_entity"
 ENTSOE_ENTITY = "entsoe_entity"
@@ -64,6 +67,28 @@ def _with_rank(prices):
 def _with_filter(filter, normalize):
     return lambda prices : sum([a * b for a, b in zip(prices, filter)]) * normalize(prices)
 
+def _get_next_n_hours_from_nordpool(n, np):
+    prices = np.attributes["today"]
+    hour = dt.now().hour
+    # Get tomorrow if needed:
+    if len(prices) < hour + n and np.attributes["tomorrow_valid"]:
+        prices = prices + np.attributes["tomorrow"]
+    # Nordpool sometimes returns null prices, https://github.com/custom-components/nordpool/issues/125
+    # The nulls are typically at (tail of) "tomorrow", so simply removing them is reasonable:
+    prices = [x for x in prices if x is not None]
+    return prices[hour: hour + n]
+
+def _get_next_n_hours_from_entsoe(n, e):
+    prices = []
+    if p := e.attributes["prices"]:
+        hour_before_now = dt.utcnow() - timedelta(hours=1)
+        for item in p:
+            if prices or hour_before_now < datetime.fromisoformat(item["time"]):
+                prices.append(item["price"])
+                if len(prices) == n:
+                    break
+    return prices
+
 class NordpoolDiffSensor(SensorEntity):
     _attr_icon = "mdi:flash"
 
@@ -114,39 +139,21 @@ class NordpoolDiffSensor(SensorEntity):
         prices = self._get_next_n_hours(self._filter_length + 1)  # +1 to calculate next hour
         self._state = round(self._compute(prices[:-1]), 3)
         self._next_hour = round(self._compute(prices[1:]), 3)
+        # TODO here could add caching, this really needs to be recalculated only each xx:00 if successful.
 
     def _get_next_n_hours(self, n):
         # Prefer entsoe, fallback to nordpool:
         prices = []
         if e := self.hass.states.get(self._entsoe_entity_id):
             prices = _get_next_n_hours_from_entsoe(n, e)
-        if (len(prices) < n) and (np := self.hass.states.get(self._nordpool_entity_id)):
+            _LOGGER.debug(f"{n} prices from entsoe {prices}")
+        # FIXME the True below only for temporary debugging, remove!
+        if (True or (len(prices) < n)) and (np := self.hass.states.get(self._nordpool_entity_id)):
             np_prices = _get_next_n_hours_from_nordpool(n, np)
+            _LOGGER.debug(f"{n} prices from nordpool {np_prices}")
             if len(np_prices) > len(prices):
                 prices = np_prices
         # Pad if needed, using last element:
         prices = prices + (n - len(prices)) * [prices[-1]]
+        _LOGGER.debug(f"{n} prices after padding {prices}")
         return prices
-
-def _get_next_n_hours_from_nordpool(n, np):
-    prices = np.attributes["today"]
-    hour = dt.now().hour
-    # Get tomorrow if needed:
-    if len(prices) < hour + n and np.attributes["tomorrow_valid"]:
-        prices = prices + np.attributes["tomorrow"]
-    # Nordpool sometimes returns null prices, https://github.com/custom-components/nordpool/issues/125
-    # The nulls are typically at (tail of) "tomorrow", so simply removing them is reasonable:
-    prices = [x for x in prices if x is not None]
-    return prices[hour: hour + n]
-
-
-def _get_next_n_hours_from_entsoe(n, e):
-    prices = []
-    if p := e.attributes["prices"]:
-        hour_before_now = dt.utcnow() - timedelta(hours=1)
-        for item in p:
-            if prices or hour_before_now < datetime.fromisoformat(item["time"]):
-                prices.append(item["price"])
-                if len(prices) == n:
-                    break
-    return prices
