@@ -170,6 +170,7 @@ logger:
 [^1]: [Nord Pool API documentation](https://www.nordpoolgroup.com/en/trading/api/) states
 _If you are a Nord Pool customer, using our trading APIs is for free. All others must become a customer to use our APIs._
 Which apparently means that almost nobody should be using it, even though the API is technically public and appears to work without any tokens.
+It's more correct to use [ENTSO-E](https://transparency.entsoe.eu/) which is intended to be used by anyone.
 
 [^2]: Fancy way of saying that the price for the current hour is subtracted from the average price for the next few
 hours.
