@@ -2,7 +2,7 @@
 
 Requires https://github.com/JaccoR/hass-entso-e and/or https://github.com/custom-components/nordpool
 
-[ENTSO-E](https://transparency.entsoe.eu/) or [Nord Pool](https://www.nordpoolgroup.com/) provide spot prices,
+[ENTSO-E](https://transparency.entsoe.eu/) and [Nord Pool](https://www.nordpoolgroup.com/) provide spot prices,
 but making good use of those prices is not easy.
 This component provides various algorithms whose output can be used for deciding when to turn water heater or
 car charger on/off, or for adjusting target temperature of a heater so that it will heat more just before prices
