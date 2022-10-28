@@ -127,8 +127,8 @@ used to be adjusted roughly +-2 deg C, it's not reasonable for that to become +-
 
 To compensate for that, `normalize` was introduced. Current options include `normalize: no` (no normalization, default),
 `normalize: max` (output of the filter is divided by maximum price of the next `filter_length` hours), and `normalize: max_min`
-(output of the filter is divided by maximum minus minimum price of the next `filter_length` hours). These work reasonably
-when `filter_length` is 10 or more, making the output magnitude less dependent of current overall electricity price.
+(output of the filter is divided by maximum minus minimum price of the next `filter_length` hours). These work reasonably when
+`filter_length` is 10 or more, making the output magnitude less dependent of current overall electricity price.
 
 ## Rank and interval
 
