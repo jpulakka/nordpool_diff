@@ -152,7 +152,9 @@ class NordpoolDiffSensor(SensorEntity):
             _LOGGER.debug(f"{n} prices from nordpool {np_prices}")
             if len(np_prices) > len(prices):
                 prices = np_prices
-        # Pad if needed, using last element. FIXME what to do if prices is totally empty, then even prices[-1] fails?
+        if not prices:  # Fail gracefully
+            return n * [0]
+        # Pad if needed, using last element.
         prices = prices + (n - len(prices)) * [prices[-1]]
         _LOGGER.debug(f"{n} prices after padding {prices}")
         return prices
