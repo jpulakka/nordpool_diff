@@ -142,18 +142,17 @@ class NordpoolDiffSensor(SensorEntity):
         # TODO here could add caching, this really needs to be recalculated only each xx:00 if successful.
 
     def _get_next_n_hours(self, n):
-        # Prefer entsoe, fallback to nordpool:
-        prices = []
+        prices = [0]  # To fail gracefully if nothing works.
+        # Prefer entsoe:
         if e := self.hass.states.get(self._entsoe_entity_id):
             prices = _get_next_n_hours_from_entsoe(n, e)
             _LOGGER.debug(f"{n} prices from entsoe {prices}")
+        # Fall back to nordpool:
         if (len(prices) < n) and (np := self.hass.states.get(self._nordpool_entity_id)):
             np_prices = _get_next_n_hours_from_nordpool(n, np)
             _LOGGER.debug(f"{n} prices from nordpool {np_prices}")
             if len(np_prices) > len(prices):
                 prices = np_prices
-        if not prices:  # Fail gracefully
-            return n * [0]
         # Pad if needed, using last element.
         prices = prices + (n - len(prices)) * [prices[-1]]
         _LOGGER.debug(f"{n} prices after padding {prices}")
