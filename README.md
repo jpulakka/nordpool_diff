@@ -73,12 +73,13 @@ Other parameters to configure include `filter_length`, `filter_type`, `unit` and
 
  ```yaml
  sensor:
- - platform: nordpool_diff
-   filter_length: 10
-   filter_type: triangle
-   unit: EUR/kWh/h
-   normalize: no
-  ```
+   - platform: nordpool_diff
+     nordpool_entity: sensor.nordpool_kwh_fi_eur_3_095_024
+     filter_length: 10
+     filter_type: triangle
+     unit: EUR/kWh/h
+     normalize: no
+ ```
 
 `unit` can be any string. The default is EUR/kWh/h to reflect that the sensor output loosely speaking reflects change
 rate (1/h) of hourly price (EUR/kWh).
