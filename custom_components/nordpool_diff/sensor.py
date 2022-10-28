@@ -32,9 +32,9 @@ UNIT = "unit"
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
     vol.Optional(NORDPOOL_ENTITY, default=None): cv.entity_id,  # Is there a way to require EITHER nordpool OR entsoe?
     vol.Optional(ENTSOE_ENTITY, default="sensor.current_electricity_market_price"): cv.entity_id,  # hass-entso-e's default entity id
-    vol.Optional(FILTER_LENGTH, default=12): vol.All(vol.Coerce(int), vol.Range(min=2, max=20)),
+    vol.Optional(FILTER_LENGTH, default=10): vol.All(vol.Coerce(int), vol.Range(min=2, max=20)),
     vol.Optional(FILTER_TYPE, default=TRIANGLE): vol.In([RECTANGLE, TRIANGLE, INTERVAL, RANK]),
-    vol.Optional(NORMALIZE, default=MAX_MIN): vol.In([NO, MAX, MAX_MIN]),
+    vol.Optional(NORMALIZE, default=NO): vol.In([NO, MAX, MAX_MIN]),
     vol.Optional(UNIT, default="EUR/kWh/h"): cv.string
 })
 
