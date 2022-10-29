@@ -51,7 +51,9 @@ Install and configure https://github.com/JaccoR/hass-entso-e/ and/or https://git
       - platform: nordpool_diff
     ```
 
-    The default setup assumes that hass-entso-e provides `sensor.current_electricity_market_price` entity.
+    The default setup assumes that hass-entso-e provides `sensor.current_electricity_market_price` entity,
+    which it does, if you left optional "Name" empty when configuring hass-entso-e.
+    
     Explicit `entsoe_entity` and/or `nordpool_entity` IDs can also be specified:
 
     ```yaml
