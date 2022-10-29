@@ -83,7 +83,7 @@ def _get_next_n_hours_from_entsoe(n, e):
     if p := e.attributes["prices"]:
         hour_before_now = dt.utcnow() - timedelta(hours=1)
         for item in p:
-            if prices or hour_before_now < datetime.fromisoformat(item["time"]):
+            if prices or hour_before_now <= datetime.fromisoformat(item["time"]):
                 prices.append(item["price"])
                 if len(prices) == n:
                     break
@@ -142,7 +142,7 @@ class NordpoolDiffSensor(SensorEntity):
         # TODO here could add caching, this really needs to be recalculated only each xx:00 if successful.
 
     def _get_next_n_hours(self, n):
-        prices = [0]  # To fail gracefully if nothing works.
+        prices = []
         # Prefer entsoe:
         if e := self.hass.states.get(self._entsoe_entity_id):
             prices = _get_next_n_hours_from_entsoe(n, e)
@@ -153,6 +153,9 @@ class NordpoolDiffSensor(SensorEntity):
             _LOGGER.debug(f"{n} prices from nordpool {np_prices}")
             if len(np_prices) > len(prices):
                 prices = np_prices
+        # Fail gracefully if nothing works:
+        if not prices:
+            return n * [0]
         # Pad if needed, using last element.
         prices = prices + (n - len(prices)) * [prices[-1]]
         _LOGGER.debug(f"{n} prices after padding {prices}")
