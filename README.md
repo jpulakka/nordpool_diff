@@ -1,8 +1,9 @@
 # nordpool_diff custom component for Home Assistant
 
-Requires https://github.com/custom-components/nordpool
+Requires https://github.com/JaccoR/hass-entso-e and/or https://github.com/custom-components/nordpool
 
-[Nord Pool](https://www.nordpoolgroup.com/) gives you spot prices[^1], but making good use of those prices is not easy.
+[ENTSO-E](https://transparency.entsoe.eu/) and [Nord Pool](https://www.nordpoolgroup.com/) provide spot prices,
+but making good use of those prices is not easy.
 This component provides various algorithms whose output can be used for deciding when to turn water heater or
 car charger on/off, or for adjusting target temperature of a heater so that it will heat more just before prices
 will go up (to allow heating less when prices are high), and heat less just before prices will go down.
@@ -16,9 +17,18 @@ suitable for controlling things that require N contiguous hours to work, such as
 no guarantees about how many hours per day the output will stay above some threshold, even if typical price variations
 may make the output typically behave this or that way most of the time.
 
+## ENTSO-E vs. Nord Pool
+
+This component was initially (in 2021) created to support https://github.com/custom-components/nordpool, hence the name.
+But after that (in 2022) https://github.com/JaccoR/hass-entso-e became available. Besides being 100 % legal to use[^1],
+ENTSO-E also covers wider range of markets than Nord Pool.
+
+Since v0.2.0 / https://github.com/jpulakka/nordpool_diff/issues/21 hass-entso-e is preferred and default, but nordpool
+still works, and can also be used together with hass-entso-e as an automatic fallback mechanism when ENTSO-E API is down.
+
 ## Installation
 
-Install and configure https://github.com/custom-components/nordpool first.
+Install and configure https://github.com/JaccoR/hass-entso-e/ and/or https://github.com/custom-components/nordpool first.
 
 ### Option 1: HACS
 1. Go to HACS -> Integrations
@@ -39,17 +49,28 @@ Install and configure https://github.com/custom-components/nordpool first.
     ```yaml
     sensor:
       - platform: nordpool_diff
+    ```
+
+    The default setup assumes that hass-entso-e provides `sensor.current_price` entity,
+    which it does, if you left optional "Name" empty when configuring hass-entso-e.
+    
+    Explicit `entsoe_entity` and/or `nordpool_entity` IDs can also be specified:
+
+    ```yaml
+    sensor:
+      - platform: nordpool_diff
+        entsoe_entity: sensor.current_price
         nordpool_entity: sensor.nordpool_kwh_fi_eur_3_095_024
     ```
 
-   Modify the `nordpool_entity` value according to your exact nordpool entity ID.
+   Modify the `entsoe_entity` and/or `nordpool_entity` values according to your exact entity IDs.
 
 2. Restart HA again to load the configuration. Now you should see `nordpool_diff_triangle_10` sensor, where
    the `triangle_10` part corresponds to default values of optional parameters, explained below.
 
 ## Optional parameters
 
-Optional parameters to configure include `filter_length`, `filter_type`, `unit` and `normalize`, defaults are `10`, `triangle`,
+Other parameters to configure include `filter_length`, `filter_type`, `unit` and `normalize`, defaults are `10`, `triangle`,
 `EUR/kWh/h` and `no`, respectively:
 
  ```yaml
@@ -83,17 +104,17 @@ current hour and the next multipliers correspond to upcoming hours.
 Smallest possible `filter_length: 2` creates FIR `[-1, 1]`. That is, price for the current hour is subtracted from the
 price of the next hour. In this case `filter_type: rectangle` and `filter_type: triangle` are identical.
 
-`filter_length: 3`, `filter_type: rectangle` creates FIR `[-1, 1/2, 1/2]`
+`filter_length: 3`,
+* `filter_type: rectangle` creates FIR `[-1, 1/2, 1/2]`
+* `filter_type: triangle` creates FIR `[-1, 2/3, 1/3]`
 
-`filter_length: 3`, `filter_type: triangle` creates FIR `[-1, 2/3, 1/3]`
+`filter_length: 4`,
+* `filter_type: rectangle` creates FIR `[-1, 1/3, 1/3, 1/3]`
+* `filter_type: triangle` creates FIR `[-1, 3/6, 2/6, 1/6]`
 
-`filter_length: 4`, `filter_type: rectangle` creates FIR `[-1, 1/3, 1/3, 1/3]`
-
-`filter_length: 4`, `filter_type: triangle` creates FIR `[-1, 3/6, 2/6, 1/6]`
-
-`filter_length: 5`, `filter_type: rectangle` creates FIR `[-1, 1/4, 1/4, 1/4, 1/4]`
-
-`filter_length: 5`, `filter_type: triangle` creates FIR `[-1, 4/10, 3/10, 2/10, 1/10]`
+`filter_length: 5`,
+* `filter_type: rectangle` creates FIR `[-1, 1/4, 1/4, 1/4, 1/4]`
+* `filter_type: triangle` creates FIR `[-1, 4/10, 3/10, 2/10, 1/10]`
 
 And so on. With rectangle, the right side of the filter is "flat". With triangle, the right side is weighting soon
 upcoming hours more than the farther away "tail" hours. First entry is always -1 and the filter is normalized so that
@@ -137,12 +158,21 @@ threshold but the next hour value is below the threshold, and we would like to a
 shouldn't turn the thing on at xx:59 if we would turn it off only after 1 minute. This can be avoided by taking the next
 hour value into account.
 
+## Debug logging
+
+Add the following to `configuration.yaml`:
+
+ ```yaml
+logger:
+  default: info
+  logs:
+    custom_components.nordpool_diff.sensor: debug
+```
+
 [^1]: [Nord Pool API documentation](https://www.nordpoolgroup.com/en/trading/api/) states
 _If you are a Nord Pool customer, using our trading APIs is for free. All others must become a customer to use our APIs._
-Regardless, the API is technically public and appears to work without any tokens.
-[ENTSO-E](https://transparency.entsoe.eu/) would be the correct place to fetch the prices from, and now (10/2022)
-there's also a HASS integration for that: https://github.com/JaccoR/hass-entso-e . That will be integrated in 
-https://github.com/jpulakka/nordpool_diff/issues/21
+Which apparently means that almost nobody should be using it, even though the API is technically public and appears to work without any tokens.
+It's more correct to use [ENTSO-E](https://transparency.entsoe.eu/) which is intended to be used by anyone.
 
 [^2]: Fancy way of saying that the price for the current hour is subtracted from the average price for the next few
 hours.
