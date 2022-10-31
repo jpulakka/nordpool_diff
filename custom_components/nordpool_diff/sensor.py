@@ -31,7 +31,7 @@ UNIT = "unit"
 # https://github.com/home-assistant/core/blob/dev/homeassistant/helpers/config_validation.py
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
     vol.Optional(NORDPOOL_ENTITY, default=""): cv.string,  # Is there a way to require EITHER nordpool OR entsoe being valid cv.entity_id?
-    vol.Optional(ENTSOE_ENTITY, default="sensor.current_price"): cv.string,  # hass-entso-e's default entity id
+    vol.Optional(ENTSOE_ENTITY, default="sensor.current_electricity_market_price"): cv.string,  # hass-entso-e's default entity id
     vol.Optional(FILTER_LENGTH, default=10): vol.All(vol.Coerce(int), vol.Range(min=2, max=20)),
     vol.Optional(FILTER_TYPE, default=TRIANGLE): vol.In([RECTANGLE, TRIANGLE, INTERVAL, RANK]),
     vol.Optional(NORMALIZE, default=NO): vol.In([NO, MAX, MAX_MIN]),
@@ -145,14 +145,20 @@ class NordpoolDiffSensor(SensorEntity):
         prices = []
         # Prefer entsoe:
         if e := self.hass.states.get(self._entsoe_entity_id):
-            prices = _get_next_n_hours_from_entsoe(n, e)
-            _LOGGER.debug(f"{n} prices from entsoe {prices}")
+            try:
+                prices = _get_next_n_hours_from_entsoe(n, e)
+                _LOGGER.debug(f"{n} prices from entsoe {prices}")
+            except:
+                _LOGGER.exception("_get_next_n_hours_from_entsoe")
         # Fall back to nordpool:
         if (len(prices) < n) and (np := self.hass.states.get(self._nordpool_entity_id)):
-            np_prices = _get_next_n_hours_from_nordpool(n, np)
-            _LOGGER.debug(f"{n} prices from nordpool {np_prices}")
-            if len(np_prices) > len(prices):
-                prices = np_prices
+            try:
+                np_prices = _get_next_n_hours_from_nordpool(n, np)
+                _LOGGER.debug(f"{n} prices from nordpool {np_prices}")
+                if len(np_prices) > len(prices):
+                    prices = np_prices
+            except:
+                _LOGGER.exception("_get_next_n_hours_from_nordpool")
         # Fail gracefully if nothing works:
         if not prices:
             return n * [0]
