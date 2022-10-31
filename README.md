@@ -23,10 +23,10 @@ This component was initially (in 2021) created to support https://github.com/cus
 But after that (in 2022) https://github.com/JaccoR/hass-entso-e became available. Besides being 100 % legal to use[^1],
 ENTSO-E also covers wider range of markets than Nord Pool.
 
-Since v0.2.0 hass-entso-e is preferred and default, but nordpool still works, and can also be used together with hass-entso-e
-as an automatic fallback mechanism when ENTSO-E API is down. The mechanism works as follows:
+Since v0.2.0 hass-entso-e is preferred and default, but nordpool still works, and can also be used as an automatic fallback
+mechanism to complement hass-entso-e when ENTSO-E API is down. The logic is as follows:
 1. Look up prices from hass-entso-e, if exists.
-2. If less than N upcoming prices available, then look up prices from nordpool too, if exists.
+2. If less than N upcoming hours available, then look up prices from nordpool too, if exists.
 3. Use whichever (hass-entso-e or nordpool) provided more upcoming hours.
 
 ## Installation
