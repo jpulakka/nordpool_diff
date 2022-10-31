@@ -23,8 +23,11 @@ This component was initially (in 2021) created to support https://github.com/cus
 But after that (in 2022) https://github.com/JaccoR/hass-entso-e became available. Besides being 100 % legal to use[^1],
 ENTSO-E also covers wider range of markets than Nord Pool.
 
-Since v0.2.0 / https://github.com/jpulakka/nordpool_diff/issues/21 hass-entso-e is preferred and default, but nordpool
-still works, and can also be used together with hass-entso-e as an automatic fallback mechanism when ENTSO-E API is down.
+Since v0.2.0 hass-entso-e is preferred and default, but nordpool still works, and can also be used together with hass-entso-e
+as an automatic fallback mechanism when ENTSO-E API is down. The mechanism works as follows:
+1. Look up prices from hass-entso-e, if exists.
+2. If less than N upcoming prices available, then look up prices from nordpool too, if exists.
+3. Use whichever (hass-entso-e or nordpool) provided more upcoming hours.
 
 ## Installation
 
@@ -51,7 +54,7 @@ Install and configure https://github.com/JaccoR/hass-entso-e and/or https://gith
       - platform: nordpool_diff
     ```
 
-    The default setup assumes that hass-entso-e provides `sensor.current_electricity_market_pricee` entity,
+    The default setup assumes that hass-entso-e provides `sensor.current_electricity_market_price` entity,
     which it does, if you left optional "Name" empty when configuring hass-entso-e.
     
     Explicit `entsoe_entity` and/or `nordpool_entity` IDs can also be specified:
