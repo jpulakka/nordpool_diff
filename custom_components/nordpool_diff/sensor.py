@@ -80,7 +80,7 @@ def _get_next_n_hours_from_nordpool(n, np):
 
 def _get_next_n_hours_from_entsoe(n, e):
     prices = []
-    if p := e.attributes["prices"]:
+    if p := e.attributes.get("prices"):
         hour_before_now = dt.utcnow() - timedelta(hours=1)
         for item in p:
             if prices or hour_before_now <= datetime.fromisoformat(item["time"]):
