@@ -10,6 +10,7 @@ from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 from homeassistant.util import dt
 from datetime import datetime, timedelta
+from math import sqrt
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -25,6 +26,8 @@ NORMALIZE = "normalize"
 NO = "no"
 MAX = "max"
 MAX_MIN = "max_min"
+SQRT_MAX = "sqrt_max"
+MAX_MIN_SQRT_MAX = "max_min_sqrt_max"
 UNIT = "unit"
 
 # https://developers.home-assistant.io/docs/development_validation/
@@ -102,6 +105,13 @@ class NordpoolDiffSensor(SensorEntity):
         elif normalize == MAX_MIN:
             normalize = lambda prices : 1 / (max(prices) - min(prices) if max(prices) - min(prices) > 0 else 1)
             normalize_suffix = "_normalize_max_min"
+        elif normalize == SQRT_MAX:
+            normalize = lambda prices: 1 / sqrt(max(prices) if max(prices) > 0 else 1)
+            normalize_suffix = "_normalize_sqrt_max"
+        elif normalize == MAX_MIN_SQRT_MAX:
+            normalize = lambda prices: sqrt(max(prices) if max(prices) > 0 else 1) \
+                                       / (max(prices) - min(prices) if max(prices) - min(prices) > 0 else 1)
+            normalize_suffix = "_normalize_max_min_sqrt_max"
         else:  # NO
             normalize = lambda prices : 1
             normalize_suffix = ""
