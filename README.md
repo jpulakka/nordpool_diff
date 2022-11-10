@@ -134,8 +134,11 @@ To compensate for that, `normalize` was introduced. Options include:
 * `normalize: no` = no normalization, default.
 * `normalize: max` = output of the filter is divided by maximum price of the next `filter_length` hours.
 * `normalize: max_min` = output of the filter is divided by maximum minus minimum price of the next `filter_length` hours.
-* `normalize: sqrt_max` = output of the filter is divided by square root of maximum price of the next `filter_length` hours. This provides "somewhat scale-free normalization" where the output magnitude depends on price magnitude, but not linearly so; 9x price gives only 3x output.
-* `normalize: max_min_sqrt_max` = output of the filter is divided by maximum minus minimum price of the next `filter_length` hours divided by square root of maximum price of the next `filter_length` hours. This provides another variation of "somewhat scale-free normalization".
+* `normalize: sqrt_max` = output of the filter is divided by square root of maximum price of the next `filter_length` hours. This provides "somewhat scale-free normalization" where the output magnitude depends on price magnitude, but not linearly so.
+* `normalize: max_min_sqrt_max` = output of the filter is multiplied by square root of maximum price of the next `filter_length` hours and divided by maximum minus minimum price of the next `filter_length` hours. This is maybe the best ("somewhat scale-free") normalization. Think about it this way:
+  * Raw output of the FIR differentiator is proprtional to price *variation*.
+  * Divide by maximum minus minimum price (= price variation), to get scale-free output.
+  * Multiply by square root of maximum price, to introduce scale. So now 9x price gives 3x output.
 
 Normalization works reasonably when `filter_length` is 10 or more, making the output magnitude less dependent of current overall electricity price.
 Possible edge case of price staying exactly constant or zero for long time is handled gracefully.
