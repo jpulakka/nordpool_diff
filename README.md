@@ -132,14 +132,12 @@ used to be adjusted roughly +-2 deg C, it's not reasonable for that to become +-
 
 To compensate for that, `normalize` was introduced. Options include:
 * `normalize: no` = no normalization, default.
-* `normalize: max` = output of the filter is divided by maximum price of the next `filter_length` hours
-* `normalize: max_min` = output of the filter is divided by maximum minus minimum price of the next `filter_length` hours
+* `normalize: max` = output of the filter is divided by maximum price of the next `filter_length` hours.
+* `normalize: max_min` = output of the filter is divided by maximum minus minimum price of the next `filter_length` hours.
 * `normalize: sqrt_max` = output of the filter is divided by square root of maximum price of the next `filter_length` hours. This provides "somewhat scale-free normalization" where the output magnitude depends on price magnitude, but not linearly so; 9x price gives only 3x output.
 * `normalize: max_min_sqrt_max` = output of the filter is divided by maximum minus minimum price of the next `filter_length` hours divided by square root of maximum price of the next `filter_length` hours. This provides another variation of "somewhat scale-free normalization".
 
 These work reasonably when `filter_length` is 10 or more, making the output magnitude less dependent of current overall electricity price.
-
-The last two options (sqrt_max, max_min_sqrt_max) provide "somewhat scale-free normalization"
 
 **It is very recommended to use some form of normalization** if you use the linear filters for anything else than thresholding on 0.
 
