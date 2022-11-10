@@ -137,9 +137,8 @@ To compensate for that, `normalize` was introduced. Options include:
 * `normalize: sqrt_max` = output of the filter is divided by square root of maximum price of the next `filter_length` hours. This provides "somewhat scale-free normalization" where the output magnitude depends on price magnitude, but not linearly so; 9x price gives only 3x output.
 * `normalize: max_min_sqrt_max` = output of the filter is divided by maximum minus minimum price of the next `filter_length` hours divided by square root of maximum price of the next `filter_length` hours. This provides another variation of "somewhat scale-free normalization".
 
-These work reasonably when `filter_length` is 10 or more, making the output magnitude less dependent of current overall electricity price.
-
-**It is very recommended to use some form of normalization** if you use the linear filters for anything else than thresholding on 0.
+Normalization works reasonably when `filter_length` is 10 or more, making the output magnitude less dependent of current overall electricity price.
+**It is highly recommended to use some form of normalization if you use the linear filters for anything else than thresholding on 0.**
 
 ## Rank and interval
 
