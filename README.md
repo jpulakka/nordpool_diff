@@ -141,7 +141,7 @@ To compensate for that, `normalize` was introduced. Options include:
   * Multiply by square root of maximum price (could also use e.g. average, but max is good enough and besides less likely negative), to introduce scale. So now 9x price gives 3x output.
 
 Normalization works reasonably when `filter_length` is 10 or more.
-Possible edge cases of price staying exactly constant, zero or negative for long time is handled gracefully.
+Possible edge cases of price staying exactly constant, zero or negative for long time are handled gracefully.
 **It is highly recommended to use some form of normalization if you use the linear filters for anything else than thresholding on 0.**
 
 ## Rank and interval
