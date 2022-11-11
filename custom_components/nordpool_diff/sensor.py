@@ -109,7 +109,7 @@ class NordpoolDiffSensor(SensorEntity):
             normalize = lambda prices: 1 / sqrt(max(prices) if max(prices) > 0 else 1)
             normalize_suffix = "_normalize_sqrt_max"
         elif normalize == MAX_MIN_SQRT_MAX:
-            normalize = lambda prices: sqrt(max(prices) if max(prices) > 0 else 1) \
+            normalize = lambda prices: sqrt(max(prices) if max(prices) > 0 else 0) \
                                        / (max(prices) - min(prices) if max(prices) - min(prices) > 0 else 1)
             normalize_suffix = "_normalize_max_min_sqrt_max"
         else:  # NO
