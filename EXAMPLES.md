@@ -61,7 +61,7 @@ sensor:
     nordpool_entity: sensor.nordpool_kwh_fi_eur_3_095_024
     filter_length: 15
     filter_type: triangle
-    normalize: max_min
+    normalize: max_min_sqrt_max
 
 ...
 
