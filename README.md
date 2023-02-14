@@ -1,9 +1,7 @@
 # nordpool_diff custom component for Home Assistant
 
-Requires https://github.com/JaccoR/hass-entso-e and/or https://github.com/custom-components/nordpool
-
-[ENTSO-E](https://transparency.entsoe.eu/) and [Nord Pool](https://www.nordpoolgroup.com/) provide spot prices,
-but making good use of those prices is not easy.
+Electricity spot prices can be fetched from [ENTSO-E](https://transparency.entsoe.eu/) and [Nord Pool](https://www.nordpoolgroup.com/)
+into Home Assistant, but making good use of those prices is not easy.
 This component provides various algorithms whose output can be used for deciding when to turn water heater or
 car charger on/off, or for adjusting target temperature of a heater so that it will heat more just before prices
 will go up (to allow heating less when prices are high), and heat less just before prices will go down.
@@ -31,83 +29,92 @@ mechanism to complement hass-entso-e when ENTSO-E API is down. The logic is as f
 
 ## Installation
 
-Install and configure https://github.com/JaccoR/hass-entso-e and/or https://github.com/custom-components/nordpool first.
-
-### Option 1: HACS
-1. Go to HACS -> Integrations
-2. Click the three dots on the top right and select `Custom Repositories`
-3. Enter `https://github.com/jpulakka/nordpool_diff` as repository, select the category `Integration` and click Add
-4. A new custom integration shows up for installation (Nordpool Diff) - install it
-5. Restart Home Assistant
-
-### Option 2: Manual
-1. Copy the `nordpool_diff` folder to HA `<config_dir>/custom_components/nordpool_diff/`
-2. Restart HA. (Skipping restarting before modifying configuration would give "Integration 'nordpool_diff' not found"
-   error message from the configuration.)
-   
-## Configuration
-
-1. Add the following to your `configuration.yaml` file:
-
+1. Install `hass-entso-e` (https://github.com/JaccoR/hass-entso-e). When configuring it, you can leave "Name" blank.
+2. Optionally: Install `nordpool` (https://github.com/custom-components/nordpool). You can also use just `nordpool` and not `hass-entso-e`, if you want to.
+3. Install `nordpool_diff`, either using HACS or manually
+     1. HACS
+         1. Go to HACS -> Integrations
+         2. Click the three dots on the top right and select `Custom Repositories`
+         3. Enter `https://github.com/jpulakka/nordpool_diff` as repository, select the category `Integration` and click Add
+         4. A new custom integration shows up for installation (Nordpool Diff) - install it
+         5. Restart Home Assistant
+      2. Manually
+         1. Copy the `nordpool_diff` folder to HA `<config_dir>/custom_components/nordpool_diff/`
+         2. Restart HA. (Skipping restarting before modifying configuration would give "Integration 'nordpool_diff' not found" error message from the configuration.)
+4. Configure `nordpool_diff`. Add the following to your `configuration.yaml` file:
     ```yaml
     sensor:
       - platform: nordpool_diff
     ```
-
-    The default setup assumes that hass-entso-e provides `sensor.average_electricity_price_today` entity
-    (which it does, if you left optional "Name" empty when configuring hass-entso-e) with `prices` attribute.
-    
-    Explicit `entsoe_entity` and/or `nordpool_entity` IDs can also be specified:
-
-    ```yaml
-    sensor:
-      - platform: nordpool_diff
-        entsoe_entity: sensor.average_electricity_price_today
-        nordpool_entity: sensor.nordpool_kwh_fi_eur_3_095_024
-    ```
-
-   Modify the `entsoe_entity` and/or `nordpool_entity` values according to your exact entity IDs.
-
-2. Restart HA again to load the configuration. Now you should see `nordpool_diff_triangle_10` sensor, where
+5. Restart HA again to load the configuration. Now you should see `nordpool_diff_triangle_10` sensor, where
    the `triangle_10` part corresponds to default values of optional parameters, explained below.
 
 ## Optional parameters
 
-Other parameters to configure include `filter_length`, `filter_type`, `unit` and `normalize`, defaults are `10`, `triangle`,
-`EUR/kWh/h` and `no`, respectively:
+### Entsoe entity
+The Entsoe entity holds the prices. 
+If you left the "Name" empty when configuring hass-entso-e, it will be named `sensor.average_electricity_price_today`, and will be found automatically by this setup.
+If you have different entity ID, you need to specify it, for example:
 
  ```yaml
  sensor:
    - platform: nordpool_diff
-     nordpool_entity: sensor.nordpool_kwh_fi_eur_3_095_024
-     filter_length: 10
-     filter_type: triangle
-     unit: EUR/kWh/h
-     normalize: no
+     entsoe_entity: sensor.average_electricity_price_today
  ```
 
-`unit` can be any string. The default is EUR/kWh/h to reflect that the sensor output loosely speaking reflects change
-rate (1/h) of hourly price (EUR/kWh).
+### Nordpool entity
+By default, Nordpool will not be used as a source for price information. If you want to use Nordpool, you must specify the entity ID, for example:
+ ```yaml
+ sensor:
+   - platform: nordpool_diff
+     nordpool_entity: sensor.nordpool_kwh_fi_eur_3_095_024
+ ```
 
-`filter_length` value must be an integer between 2...20, and `filter_type` must be either `triangle`, `rectangle`,
-`rank` or `interval`. They are best explained by examples. You can set up several `nordpool_diff` entities,
-each with different parameters, plot them in Lovelace, and pick what you like best. Here is an example:
+### Unit
+`unit` defines what will be used as the unit for the sensor in Home Assistant. The default is `EUR/kWh/h` to reflect that the sensor output loosely speaking reflects change rate (1/h) of hourly price (EUR/kWh). Example:
+ 
+ ```yaml
+ sensor:
+   - platform: nordpool_diff
+     unit: EUR/kWh/h
+ ```
+
+### Filter length
+The filter length tells now many hours into the future that will be taken into account when defining the filter output.
+
+`filter_length` must be an integer between 2...20, and if not specified will default to 10. Example:
+
+ ```yaml
+ sensor:
+   - platform: nordpool_diff
+     filter_length: 10
+ ```
+
+### Filter type (triangle and rectangle)
+`filter_type` can be one of `triangle`, `rectangle`, `rank` or `interval`. If not set, it will default to `triangle`.
+They are best understood by examples. You can set up several `nordpool_diff` entities,
+each with different parameters, plot them in the dashboard, and pick what you like best.
+Here is an example:
 
 ![Diff example](diff_example.png)
-
-## Triangle and rectangle
 
 `filter_type: triangle` and `filter_type: rectangle` are linear filters. They apply non-causal FIR differentiator[^2] to spot prices,
 resulting in a predictive sensor that gives positive output when the price of electricity for the current hour is cheaper
 compared to the next few hours (and negative output in the opposite case).
 
-For illustrative purposes, the following FIRs have been reflected about the time axis; the first multiplier corresponds to
+For illustrative purposes, the following FIRs reflect the time axis; the first multiplier corresponds to
 current hour and the next multipliers correspond to upcoming hours.
 
-Smallest possible `filter_length: 2` creates FIR `[-1, 1]`. That is, price for the current hour is subtracted from the
-price of the next hour. In this case `filter_type: rectangle` and `filter_type: triangle` are identical.
+`filter_length: 2`
+This is the smallest possible filter length. The price for the current hour is subtracted from the price of the next hour.
+For example, if the current current price and the price of the next hour is exactly the same, the value will be zero.
+With `filter_length: 2`, the filter types `rectangle` and `triangle` will yield identical filters:
+* `filter_type: rectangle` creates FIR `[-1, 1]`
+* `filter_type: triangle` creates FIR `[-1, 1]`
 
 `filter_length: 3`,
+With filter length of 3, we start to see how `triangle` puts more weight on the price of the next hour than the second-next hour.
+With `rectangle`, both future hours are weighted equally.
 * `filter_type: rectangle` creates FIR `[-1, 1/2, 1/2]`
 * `filter_type: triangle` creates FIR `[-1, 2/3, 1/3]`
 
@@ -123,11 +130,14 @@ And so on. With rectangle, the right side of the filter is "flat". With triangle
 upcoming hours more than the farther away "tail" hours. First entry is always -1 and the filter is normalized so that
 its sum is zero. This way the characteristic output magnitude is independent of the settings.
 
-### Normalize
+#### Normalize
+Normalize is relevant if you are using `filter_type: rectangle` or `filter_type: triangle`,
+and is highly recommended to be used if you use those filters for anything else than thresholding on 0.
+When using normalize, you should use a `filter_length` of 10 or more, for it to work well.
 
-With linear filters `filter_type: triangle` and `filter_type: rectangle`, magnitude of output is proportional to
-magnitude of input = price (variations) of electricity. Between 2021-2022, that has increased tenfold, so the characteristic
-output magnitude of the filter has also increased tenfold. That causes problems in proportional controllers; if a heater target
+`filter_type: rectangle` or `filter_type: triangle` have a magnitude of output that is proportional to the magnitude of the input,
+being the price (variations) of electricity. Between 2021-2022, that increased tenfold, so the characteristic
+output of the filter also increased tenfold. That caused problems in proportional controllers; if a heater target
 used to be adjusted roughly +-2 deg C, it's not reasonable for that to become +-20 deg C, no matter how the electricity prices evolve.
 
 To compensate for that, `normalize` was introduced. Options include:
@@ -140,11 +150,9 @@ To compensate for that, `normalize` was introduced. Options include:
   * Divide by maximum minus minimum price (= price variation; could also use e.g. standard deviation), to get scale-free output.
   * Multiply by square root of maximum price (could also use e.g. average, but max is good enough and besides less likely negative), to introduce scale. So now 9x price gives 3x output.
 
-Normalization works reasonably when `filter_length` is 10 or more.
 Possible edge cases of price staying exactly constant, zero or negative for long time are handled gracefully.
-**It is highly recommended to use some form of normalization if you use the linear filters for anything else than thresholding on 0.**
 
-## Rank and interval
+### Filter type (rank and interval)
 
 With `filter_type: rank`, the current price is ranked amongst the next `filter_length` prices. The lowest price is given
 a value of `1`, the highest price is given the value of `-1`, and the other prices are equally distributed in this
@@ -160,7 +168,7 @@ If the current price is the lowest or highest price for the next `filter_length`
 
 Since the output magnitude of the `rank` and `interval` filters are always between -1 and +1, independent of magnitude
 of price variation, it may be more appropriate (than the linear FIR filters) for simple thresholding and controlling
-binary things can only be turned on/off, such as water heaters. `normalize` setting has no effect on `rank` nor `interval`.
+binary things can only be turned on/off, such as water heaters. The `normalize` parameter has no effect on `rank` nor `interval`.
 
 ## Attributes
 
