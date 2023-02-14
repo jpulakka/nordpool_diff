@@ -55,7 +55,7 @@ Rest of the configuration is set as follows.
 
 sensor:
 
-...here some nordpool and ruuvi configurations
+...here some nordpool and ruuvi configurations, giving sensor.sisalampotila and sensor.ulko_temperature
 
   - platform: nordpool_diff
     nordpool_entity: sensor.nordpool_kwh_fi_eur_3_095_024
@@ -87,7 +87,7 @@ template:
       unit_of_measurement: "dT"
       state: >
         {% set npd = states('sensor.nordpool_diff_triangle_15_normalize_max_min_sqrt_max') | float(default=0) %}
-        {## Limit price effect at negative side to -3 deg so that heating never stops when it's cold (ulkokomponentti +2 -> lähtöpiste +27.5)  ##}
+        {## Limit price effect at negative side to -3 deg so that heating never completely stops when it's cold  ##}
         {{ [(15*npd) | round(2), -3] | max}}
 
   - sensor:
