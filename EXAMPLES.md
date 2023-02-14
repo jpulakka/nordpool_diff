@@ -1,4 +1,4 @@
-# Examples on using the filter output for adjusting thermostat
+# Example on using the nordpool_diff output for adjusting HVAC setpoint
 
 Adjusting thermostat/HVAC consists of basically three parts:
 1. `configuration.yaml`, containing all the sensors (including `nordpool_diff`), and the calculations defined as "template sensors",
