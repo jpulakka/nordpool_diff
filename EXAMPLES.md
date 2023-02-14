@@ -1,5 +1,55 @@
 # Examples on using the filter output for adjusting thermostat
 
+Adjusting thermostat/HVAC consists of basically two parts:
+1. `configuration.yaml`, containing all the sensors (`nordpool_diff` and maybe e.g. temperature readings), and the calculations defining the set temperature.
+2. `automations.yaml`, containing trigger to adjust the thermostat/HVAC whenever the set temperature changes.
+
+Below I'm using https://esphome.io/components/climate/climate_ir.html with `ilp-remote.yaml` configured as follows:
+
+ ```yaml
+ esphome:
+  name: ilp-remote
+  platform: ESP32
+  board: esp32dev
+
+# Enable logging
+logger:
+
+# Enable Home Assistant API
+api:
+
+ota:
+  password: !secret ota_password
+
+wifi:
+  ssid: !secret wifi_name
+  password: !secret wifi_password
+
+  # Enable fallback hotspot (captive portal) in case wifi connection fails
+  ap:
+    ssid: !secret fallback_ssid
+    password: !secret fallback_password
+
+captive_portal:
+
+remote_transmitter:
+  pin: GPIO27
+  carrier_duty_percent: 50%
+
+sensor:
+  - platform: homeassistant
+    id: sisalampotila
+    entity_id: sensor.sisalampotila
+
+climate:
+  - platform: mitsubishi
+    name: "ILP"
+    sensor: sisalampotila
+ ```
+
+
+Rest of the configuration is set as follows.
+
 `configuration.yaml`:
  ```yaml
 
