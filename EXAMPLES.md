@@ -64,3 +64,22 @@ template:
         {%- endif %}
 
 ```
+
+
+`automations.yaml`:
+```yaml
+- id: '1636432337197'
+  alias: Ohjaa ILPiä
+  description: ''
+  trigger:
+  - platform: state
+    entity_id: sensor.ilp_ohjaus
+  condition: []
+  action:
+  - service: climate.set_temperature
+    target:
+      entity_id: climate.ilp
+    data:
+      temperature: '{{ states.sensor.ilp_ohjaus.state | round(0, default=25) }}'
+  mode: single
+```
