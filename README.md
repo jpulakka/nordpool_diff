@@ -108,7 +108,7 @@ current hour and the next multipliers correspond to upcoming hours.
 `filter_length: 2`
 This is the smallest possible filter length. The price for the current hour is subtracted from the price of the next hour.
 For example, if the current current price and the price of the next hour is exactly the same, the value will be zero.
-With `filter_length: 2`, the filter types `rectangle` and `triangle` will always yield identical filters:
+With `filter_length: 2`, the filter types `rectangle` and `triangle` will yield identical filters:
 * `filter_type: rectangle` creates FIR `[-1, 1]`
 * `filter_type: triangle` creates FIR `[-1, 1]`
 
