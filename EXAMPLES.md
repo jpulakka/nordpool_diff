@@ -50,7 +50,7 @@ climate:
 
 Rest of the configuration is set as follows.
 
-`configuration.yaml`:
+`configuration.yaml` computes the desired temperature setpoint based on some hand-waving level heuristics:
  ```yaml
 
 sensor:
@@ -116,7 +116,7 @@ template:
 ```
 
 
-`automations.yaml`:
+`automations.yaml` connects the `sensor.ilp_ohjaus` output to `climate.set_temperature` input:
 ```yaml
 - id: '1636432337197'
   alias: Ohjaa ILPiä
