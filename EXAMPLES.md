@@ -1,10 +1,9 @@
 # Examples on using the filter output for adjusting thermostat
 
-Adjusting thermostat/HVAC consists of basically two parts:
+Adjusting thermostat/HVAC consists of basically three parts:
 1. `configuration.yaml`, containing all the sensors (`nordpool_diff` and maybe e.g. temperature readings), and the calculations defining the set temperature.
 2. `automations.yaml`, containing trigger to adjust the thermostat/HVAC whenever the set temperature changes.
-
-Below I'm using https://esphome.io/components/climate/climate_ir.html with `ilp-remote.yaml` configured as follows:
+3. Connection to the thermostat/HVAC itself. Below I'm using https://esphome.io/components/climate/climate_ir.html with `ilp-remote.yaml` configured as follows:
 
  ```yaml
  esphome:
