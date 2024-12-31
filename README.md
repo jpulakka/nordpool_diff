@@ -191,7 +191,7 @@ If you add a new Nordpool Diff sensor, Home Assistant must be restarted. Reloadi
 
 ### Changes to sensor value in the middle of the hour
 As you know, a new set of prices for the next day is published about 10-11 hours before they start to come into effect. If you have a filter length of 11 or larger, you might notice that the filter for the current hour changes in the middle of an hour during the afternoon.
-![Example](https://github.com/user-attachments/assets/1186ab35-2959-474c-a865-ca375e55c8c7)
+![Example](middle_change.png)
 
 This is since the filter suddenly has new hours to take into account, meaning it immediately makes use of new information and hence technically not an error. It might however become a problem if you are looking to avoid short on-cycles or similar.
 
