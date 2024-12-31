@@ -16,17 +16,17 @@ Nordpool Diff is not suitable for controlling washing machines, dishwashers and 
 # Installation
 
 1. Integrate electricity prices into Home Assistant, if you haven't already. You have two choices:
- 	2. [Nordpool integration](https://www.home-assistant.io/integrations/nordpool/) This is the only built-in integration in Home Assistant that can import electricity prices.
- 	1. [Entso-e](https://github.com/JaccoR/hass-entso-e). It has the benefit of being fully in accordance with the Terms and conditions. It also covers a few more markets than Nordpool.
-4. Install `nordpool_diff`, either using HACS or manually
+ 	1. [Nordpool integration](https://www.home-assistant.io/integrations/nordpool/) This is the only built-in integration in Home Assistant that can import electricity prices.
+ 	2. [Entso-e](https://github.com/JaccoR/hass-entso-e). It has the benefit of being fully in accordance with the Terms and conditions. It also covers a few more markets than Nordpool.
+2. Install `nordpool_diff`, either using HACS or manually
  	1. HACS (recommended)
-     	1. Go to [HACS](https://hacs.xyz) in your Home Assistant instance and open `Custom Repositories`
-     	3. Add this repository `https://github.com/jpulakka/nordpool_diff` as an `Integration`
-     	5. Restart Home Assistant
-  	2. Manually
-     	1. Copy the `nordpool_diff` folder to HA `<config_dir>/custom_components/nordpool_diff/`
-     	2. Restart HA. (Skipping restarting before modifying configuration would give "Integration 'nordpool_diff' not found" error message from the configuration.)
-6. Create a first `nordpool_diff` sensor. Add the following to your `configuration.yaml` file:
+     		1. Go to [HACS](https://hacs.xyz) in your Home Assistant instance and open `Custom Repositories`
+     		2. Add this repository `https://github.com/jpulakka/nordpool_diff` as an `Integration`
+     		3. Restart Home Assistant
+  	1. Manually
+     		1. Copy the `nordpool_diff` folder to HA `<config_dir>/custom_components/nordpool_diff/`
+     		2. Restart HA. (Skipping restarting before modifying configuration would give "Integration 'nordpool_diff' not found" error message from the configuration.)
+3. Create a first `nordpool_diff` sensor. Add the following to your `configuration.yaml` file:
   	```yaml
   	sensor:
     	- platform: nordpool_diff
@@ -34,8 +34,8 @@ Nordpool Diff is not suitable for controlling washing machines, dishwashers and 
       	filter_length: 10
       	normalize: max_min_sqrt_max
   	```
-8. Restart Home Assistant again
-9. You should now find a new  `sensor.nordpool_diff_triangle_10_normalize_max_min_sqrt_max` sensor that varies with the electricity price.
+4. Restart Home Assistant again
+5. You should now find a new  `sensor.nordpool_diff_triangle_10_normalize_max_min_sqrt_max` sensor that varies with the electricity price.
 
 # Configuring Nordpool Diff
 
@@ -55,7 +55,7 @@ You can create multiple Nordpool_diff sensors, with different parameters. This c
 Note that you need to restart Home Assistant for each new sensor you add to `configuration.yaml`, reloading YAML isn't enough.
 
 # How does Nordpool Diff work? (`filter_type: rectangle` and `filter_type: triangle`)
-The basics is that the price of the current hour is compared to the coming hours. The _upcoming hours_ are defined by the _filter length_. The output from the Nordpool diff sensor is a scoring in relation to the coming hours. The scoring can be done in different ways, and this is where the _filter type_ comes into play. The most basic variant is that each of the coming hours is given equal weight. For example;
+The basics is that the price of the current hour is compared to the upcoming hours. The number of hours is defined by `filter_length`. The output from the Nordpool diff sensor is a scoring in relation to the upcoming hours. The scoring can be done in different ways, and this is where `filter_type` comes into play. The most basic variant is that each of the upcoming hours is given equal weight. For example;
 
 If you have the following Nordpool Diff sensor:
  ```yaml
@@ -77,7 +77,7 @@ This means that the output of the sensor will be calculated as:
 
 So the scoring in this case is 0.175 EUR/kWh/h.
 
-This number can be thought of as an indication of how much the price is changing per hour during the number of hours (given by the filter length). Mathematically, this is called a FIR-filter. A FIR-filter always has -1 as the first value, and then followed by the multipliers that depend on the filter length, as follows:
+This number can be thought of as an indication of how much the price is changing per hour during the number of hours (given by the filter length). Mathematically, this is called a FIR-filter. This FIR-filter always has -1 as the first value, and then followed by the multipliers that depend on the filter length, as follows:
 
 | `filter_length` | FIR-filter |
 |:-------|:-----:|
@@ -88,10 +88,10 @@ This number can be thought of as an indication of how much the price is changing
 
 ...and so on...
 
-As you see, the (rectangle) filter will weight all hours equally. It will basically tell: how does the current electricyt price compare to the average of the hours within the filter length?
+As you see, the (rectangle) filter will weight all hours equally. It will basically tell: how does the current electricity price compare to the average of the hours within the filter length?
 
 ##  `filter_type: triangle`
-In addition to `rectangle`, Nordpool Diff also supports `triangle` as filter type. While the `rectangle` filter puts equal weight on all future electricity price, `rectangle` put greater weight on the hours closeser in time. This can be illustrated as:
+In addition to `rectangle`, Nordpool Diff also supports `triangle` as filter type. While the `rectangle` filter puts equal weight on all future electricity price, `triangle` put greater weight on the hours closeser in time. This can be illustrated as:
 
 | `filter_length` | FIR-filter |
 |:-------|:-----:|
@@ -102,7 +102,7 @@ In addition to `rectangle`, Nordpool Diff also supports `triangle` as filter typ
 
 ...and so on...
 
-Looking at the numbers in the FIR-filter, you might be able to spot why it's called _rectangle_.
+Looking at the numbers in the FIR-filter, you might be able to spot why it's called `triangle`.
 
 This filter type can be used to more aggressively turn up a thermostat in preparation of a price hike.
 
@@ -122,7 +122,7 @@ They yield the following graph:
 ![Diff example](diff_example.png)
 
 ## Normalize
-Sensors with `filter_type: rectangle` or `filter_type: triangle` have an output that is proportional to the variations in of the electricyt price. The greater variation, the greater the output. If a thermostat is intended to vary +/-2 degrees under normal price variations, it may start varying much more if the price variations are larger than normal. It doesn't make sense for a thermostat to be adjusted with +/-20 deg C, no matter how the electricity prices varies.
+Sensors with `filter_type: rectangle` or `filter_type: triangle` have an output that is proportional to the variations in of the electricity price. The greater variation, the greater the output. If a thermostat is intended to vary +/-2 degrees under normal price variations, it may start varying much more if the price variations are larger than normal. It doesn't make sense for a thermostat to be adjusted with +/-20 deg C, no matter how the electricity prices varies.
 
 `normalize` addresses this problem. Options include:
 * `normalize: max_min_sqrt_max`: **Recommended**. Output of the filter is multiplied by square root of maximum price of the next `filter_length` hours and divided by maximum minus minimum price of the next `filter_length` hours. Think about it this way:
