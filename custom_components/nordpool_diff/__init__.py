@@ -1,7 +1,8 @@
 from __future__ import annotations
 
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.core import Config, HomeAssistant
+from homeassistant.core_config import Config
+from homeassistant.core import HomeAssistant
 
 DOMAIN = "nordpool_diff"
 PLATFORMS = ["sensor"]
