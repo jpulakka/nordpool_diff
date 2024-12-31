@@ -29,7 +29,7 @@ Nordpool Diff is not suitable for controlling washing machines, dishwashers and 
 3. Create a first `nordpool_diff` sensor. Add the following to your `configuration.yaml` file:
   	```yaml
   	sensor:
-    	- platform: nordpool_diff
+        - platform: nordpool_diff
       	nordpool_entity: [your nordpool price sensor, for example sensor.nordpool_kwh_fi_eur_3_095_024]
       	filter_length: 10
       	normalize: max_min_sqrt_max
@@ -61,8 +61,8 @@ If you have the following Nordpool Diff sensor:
  ```yaml
  sensor:
     - platform: nordpool_diff
- 	 filter_type: rectangle
- 	 filter_length: 5
+        filter_type: rectangle
+        filter_length: 5
  ```
 This means that the output of the sensor will be calculated as:
 
