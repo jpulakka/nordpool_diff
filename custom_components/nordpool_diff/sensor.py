@@ -72,25 +72,31 @@ def _with_filter(filter, normalize):
 
 def _get_next_n_hours_from_nordpool(n, np):
     prices = np.attributes["today"]
-    hour = dt.now().hour
-    # Get tomorrow if needed:
-    if len(prices) < hour + n and np.attributes["tomorrow_valid"]:
+    now = dt.now()
+    # Determine current index: hour-based or quarter-hour based
+    # If 'today' has many entries (e.g., >= 48), assume quarter-hour resolution
+    if len(prices) >= 48:
+        start_idx = now.hour * 4 + now.minute // 15
+    else:
+        start_idx = now.hour
+    # Get tomorrow if needed
+    if len(prices) < start_idx + n and np.attributes.get("tomorrow_valid"):
         prices = prices + np.attributes["tomorrow"]
-    # Nordpool sometimes returns null prices, https://github.com/custom-components/nordpool/issues/125
-    # The nulls are typically at (tail of) "tomorrow", so simply removing them is reasonable:
+    # Remove nulls just in case
     prices = [x for x in prices if x is not None]
-    return prices[hour: hour + n]
+    return prices[start_idx: start_idx + n]
 
 def _get_next_n_hours_from_entsoe(n, e):
     prices = []
     if p := e.attributes.get("prices"):
-        hour_before_now = dt.utcnow() - timedelta(hours=1)
+        quarter_before_now = dt.utcnow() - timedelta(minutes=15)
         for item in p:
-            if prices or hour_before_now <= datetime.fromisoformat(item["time"]):
+            if prices or quarter_before_now <= datetime.fromisoformat(item["time"]):
                 prices.append(item["price"])
                 if len(prices) == n:
                     break
     return prices
+
 
 class NordpoolDiffSensor(SensorEntity):
     _attr_icon = "mdi:flash"
@@ -152,27 +158,33 @@ class NordpoolDiffSensor(SensorEntity):
         # TODO here could add caching, this really needs to be recalculated only each xx:00 if successful.
 
     def _get_next_n_hours(self, n):
+        # Interpret n as hours, convert to slots based on resolution
+        points_per_hour = 1
+        np = self.hass.states.get(self._nordpool_entity_id)
+        if np and 'today' in np.attributes:
+            if len(np.attributes['today']) >= 48:
+                points_per_hour = 4
+        slots = n * points_per_hour
         prices = []
         # Prefer entsoe:
         if e := self.hass.states.get(self._entsoe_entity_id):
             try:
-                prices = _get_next_n_hours_from_entsoe(n, e)
-                _LOGGER.debug(f"{n} prices from entsoe {prices}")
+                prices = _get_next_n_hours_from_entsoe(slots, e)
+                _LOGGER.debug(f"{slots} prices from entsoe {prices}")
             except:
                 _LOGGER.exception("_get_next_n_hours_from_entsoe")
         # Fall back to nordpool:
-        if (len(prices) < n) and (np := self.hass.states.get(self._nordpool_entity_id)):
+        if (len(prices) < slots) and (np := self.hass.states.get(self._nordpool_entity_id)):
             try:
-                np_prices = _get_next_n_hours_from_nordpool(n, np)
-                _LOGGER.debug(f"{n} prices from nordpool {np_prices}")
+                np_prices = _get_next_n_hours_from_nordpool(slots, np)
+                _LOGGER.debug(f"{slots} prices from nordpool {np_prices}")
                 if len(np_prices) > len(prices):
                     prices = np_prices
             except:
                 _LOGGER.exception("_get_next_n_hours_from_nordpool")
         # Fail gracefully if nothing works:
         if not prices:
-            return n * [0]
+            return slots * [0]
         # Pad if needed, using last element.
-        prices = prices + (n - len(prices)) * [prices[-1]]
-        _LOGGER.debug(f"{n} prices after padding {prices}")
+        prices = prices + (slots - len(prices)) * [prices[-1]]
         return prices
