@@ -1,3 +1,7 @@
+> [!WARNING]  
+> 15-minute MTU is a PITA. Support for that is being drafted in [v0.3.x release](https://github.com/jpulakka/nordpool_diff/releases/),
+> but everything doesn't work perfectly yet. Please follow https://github.com/jpulakka/nordpool_diff/issues/33 to keep updated.
+
 # What is Nordpool diff?
 
 Nordpool Diff enables you to make smarter use of hourly electricity prices by considering how the price will change over the coming hours. For example; the hours before a price increase it might be smart to run the water heater or turn up the thermostat, and during the expensive hours turn the thermostat down, thereby shifting your electricity consumption from expensive hours to cheaper hours.
