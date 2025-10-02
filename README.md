@@ -24,7 +24,7 @@ Nordpool Diff is not suitable for controlling washing machines, dishwashers and 
 # Installation
 
 1. Integrate electricity prices into Home Assistant, if you haven't already. You have two choices:
- 	1. [Nordpool custom component](https://github.com/custom-components/nordpool) (The official https://www.home-assistant.io/integrations/nordpool integration has the same name, but is completely different, and **does not work with nordpool_diff**)
+ 	1. [Nordpool custom component](https://github.com/custom-components/nordpool) (While the official https://www.home-assistant.io/integrations/nordpool integration has the same name, it is otherwise completely different, and **does not work with nordpool_diff**)
  	2. [Entso-e](https://github.com/JaccoR/hass-entso-e). It has the benefit of being fully in accordance with the Terms and Conditions. It also covers a few more markets than Nordpool.
 2. Install `nordpool_diff`, either using HACS or manually
  	1. HACS (recommended)
