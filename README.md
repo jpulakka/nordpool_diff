@@ -1,6 +1,10 @@
 > [!WARNING]  
 > 15-minute MTU is a PITA. Support for that is being drafted in [v0.3.x release](https://github.com/jpulakka/nordpool_diff/releases/),
 > but everything doesn't work perfectly yet. Please follow https://github.com/jpulakka/nordpool_diff/issues/33 to keep updated.
+>
+> There are two flavors of HASS NordPool integrations:
+> 1. https://github.com/custom-components/nordpool, release [0.0.17](https://github.com/custom-components/nordpool/releases/tag/0.0.17) works with nordpool_diff [v0.3.x](https://github.com/jpulakka/nordpool_diff/releases/)
+> 2. https://www.home-assistant.io/integrations/nordpool, **does not work with nordpool_diff**
 
 # What is Nordpool diff?
 
@@ -20,8 +24,8 @@ Nordpool Diff is not suitable for controlling washing machines, dishwashers and 
 # Installation
 
 1. Integrate electricity prices into Home Assistant, if you haven't already. You have two choices:
- 	1. [Nordpool integration](https://www.home-assistant.io/integrations/nordpool/) This is the only built-in integration in Home Assistant that can import electricity prices.
- 	2. [Entso-e](https://github.com/JaccoR/hass-entso-e). It has the benefit of being fully in accordance with the Terms and conditions. It also covers a few more markets than Nordpool.
+ 	1. [Nordpool integration]([https://www.home-assistant.io/integrations/nordpool/)](https://github.com/custom-components/nordpool)
+ 	2. [Entso-e](https://github.com/JaccoR/hass-entso-e). It has the benefit of being fully in accordance with the Terms and Conditions. It also covers a few more markets than Nordpool.
 2. Install `nordpool_diff`, either using HACS or manually
  	1. HACS (recommended)
      		1. Go to [HACS](https://hacs.xyz) in your Home Assistant instance and open `Custom Repositories`
