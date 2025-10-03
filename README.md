@@ -2,9 +2,7 @@
 > 15-minute MTU is a PITA. Support for that is being drafted in [v0.3.x release](https://github.com/jpulakka/nordpool_diff/releases/),
 > but everything doesn't work perfectly yet. Please follow https://github.com/jpulakka/nordpool_diff/issues/33 to keep updated.
 >
-> There are two flavors of HASS NordPool integrations:
-> 1. https://github.com/custom-components/nordpool, release [0.0.17](https://github.com/custom-components/nordpool/releases/tag/0.0.17) works with nordpool_diff [v0.3.x](https://github.com/jpulakka/nordpool_diff/releases/)
-> 2. https://www.home-assistant.io/integrations/nordpool, **does not work with nordpool_diff**
+> https://github.com/custom-components/nordpool, release [0.0.17](https://github.com/custom-components/nordpool/releases/tag/0.0.17) works with nordpool_diff [v0.3.x](https://github.com/jpulakka/nordpool_diff/releases/)
 
 # What is Nordpool diff?
 
@@ -183,16 +181,16 @@ _If you are a Nord Pool customer, using our trading APIs is free. All others mus
 Which apparently means that almost nobody should be using it, even though the API is technically public and appears to work without any tokens.
 It's more correct to use [ENTSO-E](https://transparency.entsoe.eu/) which is intended to be used by anyone.
 
-> [!WARNING]  
-> There are two flavors of HASS NordPool integrations:
-> 1. https://github.com/custom-components/nordpool, works with nordpool_diff
-> 2. https://www.home-assistant.io/integrations/nordpool, **does not work with nordpool_diff**
-
 Nordpool Diff supports both Entso-E and Nordpool, and if you have _both_ integrated, Nordpool Diff will use both for redundancy as follows:
 
 1. In first hand, use prices from Entso-E.
 2. If less than N upcoming hours are available, then look up prices from Nordpool too.
 3. Use whichever (Entso-E or Nordpool) provided more upcoming hours.
+
+> [!WARNING]  
+> There are two flavors of HASS NordPool integrations:
+> * https://github.com/custom-components/nordpool, works with nordpool_diff
+> * https://www.home-assistant.io/integrations/nordpool, **does not work with nordpool_diff**
 
 ## Known limitations
 
