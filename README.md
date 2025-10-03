@@ -183,6 +183,11 @@ _If you are a Nord Pool customer, using our trading APIs is free. All others mus
 Which apparently means that almost nobody should be using it, even though the API is technically public and appears to work without any tokens.
 It's more correct to use [ENTSO-E](https://transparency.entsoe.eu/) which is intended to be used by anyone.
 
+> [!WARNING]  
+> There are two flavors of HASS NordPool integrations:
+> 1. https://github.com/custom-components/nordpool, works with nordpool_diff
+> 2. https://www.home-assistant.io/integrations/nordpool, **does not work with nordpool_diff**
+
 Nordpool Diff supports both Entso-E and Nordpool, and if you have _both_ integrated, Nordpool Diff will use both for redundancy as follows:
 
 1. In first hand, use prices from Entso-E.
