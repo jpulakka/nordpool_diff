@@ -37,7 +37,7 @@ Nordpool Diff is not suitable for controlling washing machines, dishwashers and 
   	sensor:
         - platform: nordpool_diff
       	nordpool_entity: [your nordpool price sensor, for example sensor.nordpool_kwh_fi_eur_3_095_024]
-      	filter_length: 10
+      	filter_length: 40
       	normalize: max_min_sqrt_max
   	```
 4. Restart Home Assistant again
@@ -52,7 +52,7 @@ The following parameters can be added to the sensor:
 |`nordpool_entity`|  |  | Your Nordpool sensor, for example `sensor.nordpool_kwh_fi_eur_3_095_024`. Mandatory if you use Nordpool. |
 |`entsoe_entity`|  | `sensor.average_electricity_price_today` | Your Entso-E sensor, if you've named it during installation|
 |`filter_type`| `triangle`, `rectangle`, `rank`, `interval` | `triangle`| See next chapters|
-|`filter_length`| 2...20 | `10`| Defines how many hours into the future to consider|
+|`filter_length`| 2...80 | `40`| Defines how many quarters into the future to consider|
 |`normalize`| `no`, `max`, `max_min`, `sqrt_max`, `max_min_sqrt_max`| `no`| How to normalize the output of  `triangle` and `rectangle` filters. See [`Normalization` option](#normalization).|
 |`unit`| | `EUR/kWh/h`|  The unit of the sensor. Loosely speaking reflects rate of change (1/h) of hourly price (EUR/kWh)|
 
