@@ -35,7 +35,7 @@ UNIT = "unit"
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
     vol.Optional(NORDPOOL_ENTITY, default=""): cv.string,  # Is there a way to require EITHER nordpool OR entsoe being valid cv.entity_id?
     vol.Optional(ENTSOE_ENTITY, default="sensor.average_electricity_price_today"): cv.string,  # hass-entso-e's default entity id
-    vol.Optional(FILTER_LENGTH, default=10): vol.All(vol.Coerce(int), vol.Range(min=2, max=20)),
+    vol.Optional(FILTER_LENGTH, default=40): vol.All(vol.Coerce(int), vol.Range(min=2, max=80)),
     vol.Optional(FILTER_TYPE, default=TRIANGLE): vol.In([RECTANGLE, TRIANGLE, INTERVAL, RANK]),
     vol.Optional(NORMALIZE, default=NO): vol.In([NO, MAX, MAX_MIN, SQRT_MAX, MAX_MIN_SQRT_MAX]),
     vol.Optional(UNIT, default="EUR/kWh/h"): cv.string
@@ -70,23 +70,19 @@ def _with_rank(prices):
 def _with_filter(filter, normalize):
     return lambda prices : sum([a * b for a, b in zip(prices, filter)]) * normalize(prices)
 
-def _get_next_n_hours_from_nordpool(n, np):
+def _get_next_n_quarters_from_nordpool(n, np):
     prices = np.attributes["today"]
     now = dt.now()
-    # Determine current index: hour-based or quarter-hour based
-    # If 'today' has many entries (e.g., >= 48), assume quarter-hour resolution
-    if len(prices) >= 48:
-        start_idx = now.hour * 4 + now.minute // 15
-    else:
-        start_idx = now.hour
+    start_idx = now.hour * 4 + now.minute // 15
     # Get tomorrow if needed
     if len(prices) < start_idx + n and np.attributes.get("tomorrow_valid"):
         prices = prices + np.attributes["tomorrow"]
-    # Remove nulls just in case
+    # Nordpool sometimes returns null prices, https://github.com/custom-components/nordpool/issues/125
+    # The nulls are typically at (tail of) "tomorrow", so simply removing them is reasonable:
     prices = [x for x in prices if x is not None]
     return prices[start_idx: start_idx + n]
 
-def _get_next_n_hours_from_entsoe(n, e):
+def _get_next_n_quarters_from_entsoe(n, e):
     prices = []
     if p := e.attributes.get("prices"):
         quarter_before_now = dt.utcnow() - timedelta(minutes=15)
@@ -140,7 +136,7 @@ class NordpoolDiffSensor(SensorEntity):
         # https://developers.home-assistant.io/docs/entity_registry_index/ : Entities should not include the domain in
         # their Unique ID as the system already accounts for these identifiers:
         self._attr_unique_id = f"{filter_type}_{filter_length}_{unit}{normalize_suffix}"
-        self._state = self._next_hour = STATE_UNKNOWN
+        self._state = self._next_quarter = STATE_UNKNOWN
 
     @property
     def state(self):
@@ -149,42 +145,36 @@ class NordpoolDiffSensor(SensorEntity):
     @property
     def extra_state_attributes(self):
         # TODO could also add self._nordpool_entity_id etc. useful properties here.
-        return {"next_hour": self._next_hour}
+        return {"next_quarter": self._next_quarter, "next_hour": self._next_quarter}  # preserve next_hour for backwards compatibility
 
     def update(self):
-        prices = self._get_next_n_hours(self._filter_length + 1)  # +1 to calculate next hour
+        prices = self._get_next_n_quarters(self._filter_length + 1)  # +1 to calculate next quarter
         self._state = round(self._compute(prices[:-1]), 3)
-        self._next_hour = round(self._compute(prices[1:]), 3)
-        # TODO here could add caching, this really needs to be recalculated only each xx:00 if successful.
+        self._next_quarter = round(self._compute(prices[1:]), 3)
+        # TODO here could add caching, this really needs to be recalculated only each xx:00/15/30/45 if successful.
 
-    def _get_next_n_hours(self, n):
-        # Interpret n as hours, convert to slots based on resolution
-        points_per_hour = 1
-        np = self.hass.states.get(self._nordpool_entity_id)
-        if np and 'today' in np.attributes:
-            if len(np.attributes['today']) >= 48:
-                points_per_hour = 4
-        slots = n * points_per_hour
+    def _get_next_n_quarters(self, n):
         prices = []
         # Prefer entsoe:
         if e := self.hass.states.get(self._entsoe_entity_id):
             try:
-                prices = _get_next_n_hours_from_entsoe(slots, e)
-                _LOGGER.debug(f"{slots} prices from entsoe {prices}")
+                prices = _get_next_n_quarters_from_entsoe(n, e)
+                _LOGGER.debug(f"{n} prices from entsoe {prices}")
             except:
-                _LOGGER.exception("_get_next_n_hours_from_entsoe")
+                _LOGGER.exception("_get_next_n_quarters_from_entsoe")
         # Fall back to nordpool:
-        if (len(prices) < slots) and (np := self.hass.states.get(self._nordpool_entity_id)):
+        if (len(prices) < n) and (np := self.hass.states.get(self._nordpool_entity_id)):
             try:
-                np_prices = _get_next_n_hours_from_nordpool(slots, np)
-                _LOGGER.debug(f"{slots} prices from nordpool {np_prices}")
+                np_prices = _get_next_n_quarters_from_nordpool(n, np)
+                _LOGGER.debug(f"{n} prices from nordpool {np_prices}")
                 if len(np_prices) > len(prices):
                     prices = np_prices
             except:
-                _LOGGER.exception("_get_next_n_hours_from_nordpool")
+                _LOGGER.exception("_get_next_n_quarters_from_nordpool")
         # Fail gracefully if nothing works:
         if not prices:
-            return slots * [0]
+            return n * [0]
         # Pad if needed, using last element.
-        prices = prices + (slots - len(prices)) * [prices[-1]]
+        prices = prices + (n - len(prices)) * [prices[-1]]
+        _LOGGER.debug(f"{n} prices after padding {prices}")
         return prices
