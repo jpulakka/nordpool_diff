@@ -55,6 +55,7 @@ The following parameters can be added to the sensor:
 |`filter_length`| 2...80 | `40`| Defines how many quarters into the future to consider|
 |`normalize`| `no`, `max`, `max_min`, `sqrt_max`, `max_min_sqrt_max`| `no`| How to normalize the output of  `triangle` and `rectangle` filters. See [`Normalization` option](#normalization).|
 |`unit`| | `EUR/kWh/h`|  The unit of the sensor. Loosely speaking reflects rate of change (1/quarter) of quarterly price (EUR/kWh)|
+|`padding`| `last`, `previous_day` | `last`| How to fill in quarters beyond the last known price, see [Padding](#padding).|
 
 You can create multiple Nordpool_diff sensors, with different parameters. This can be a good practice when you get familiar each with different parameter, plot them in the dashboard, and pick what you like best.
 
@@ -166,6 +167,15 @@ Example:
 	filter_type: interval
 	filter_length: 12
 ```
+
+## Padding
+
+Tomorrow's prices are typically published in the early afternoon. Before that, a long `filter_length` can reach past the last known price, and the missing quarters have to be filled in:
+
+* `padding: last`: repeat the last known price (typically 23:45–24:00). This is the default and the original behavior.
+* `padding: previous_day`: use the price at the same time one day earlier, i.e. today's price for the same quarter. Prices tend to follow a daily pattern, so for example a cheap night is assumed to be cheap again rather than priced like the late evening. Falls back to the last known price if that price isn't available.
+
+With the default `last` the sensor keeps its name; other values add a suffix, e.g. `sensor.nordpool_diff_rectangle_64_padding_previous_day`.
 
 # Various comments
 
