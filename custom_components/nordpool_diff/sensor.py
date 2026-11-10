@@ -29,6 +29,10 @@ MAX_MIN = "max_min"
 SQRT_MAX = "sqrt_max"
 MAX_MIN_SQRT_MAX = "max_min_sqrt_max"
 UNIT = "unit"
+PADDING = "padding"
+LAST = "last"
+PREVIOUS_DAY = "previous_day"
+QUARTERS_PER_DAY = 96
 
 # https://developers.home-assistant.io/docs/development_validation/
 # https://github.com/home-assistant/core/blob/dev/homeassistant/helpers/config_validation.py
@@ -38,7 +42,8 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
     vol.Optional(FILTER_LENGTH, default=40): vol.All(vol.Coerce(int), vol.Range(min=2, max=80)),
     vol.Optional(FILTER_TYPE, default=TRIANGLE): vol.In([RECTANGLE, TRIANGLE, INTERVAL, RANK]),
     vol.Optional(NORMALIZE, default=NO): vol.In([NO, MAX, MAX_MIN, SQRT_MAX, MAX_MIN_SQRT_MAX]),
-    vol.Optional(UNIT, default="EUR/kWh/h"): cv.string
+    vol.Optional(UNIT, default="EUR/kWh/h"): cv.string,
+    vol.Optional(PADDING, default=LAST): vol.In([LAST, PREVIOUS_DAY]),
 })
 
 
@@ -54,8 +59,9 @@ def setup_platform(
     filter_type = config[FILTER_TYPE]
     normalize = config[NORMALIZE]
     unit = config[UNIT]
+    padding = config[PADDING]
 
-    add_entities([NordpoolDiffSensor(nordpool_entity_id, entsoe_entity_id, filter_length, filter_type, normalize, unit)])
+    add_entities([NordpoolDiffSensor(nordpool_entity_id, entsoe_entity_id, filter_length, filter_type, normalize, unit, padding)])
 
 def _with_interval(prices):
     p_min = min(prices)
@@ -71,7 +77,9 @@ def _with_filter(filter, normalize):
     return lambda prices : sum([a * b for a, b in zip(prices, filter)]) * normalize(prices)
 
 def _get_next_n_quarters_from_nordpool(n, np):
-    prices = np.attributes["today"]
+    """Return (next n prices, prices earlier today before those)."""
+    today = np.attributes["today"]
+    prices = today
     now = dt.now()
     start_idx = now.hour * 4 + now.minute // 15
     # Get tomorrow if needed
@@ -80,10 +88,12 @@ def _get_next_n_quarters_from_nordpool(n, np):
     # Nordpool sometimes returns null prices, https://github.com/custom-components/nordpool/issues/125
     # The nulls are typically at (tail of) "tomorrow", so simply removing them is reasonable:
     prices = [x for x in prices if x is not None]
-    return prices[start_idx: start_idx + n]
+    return prices[start_idx: start_idx + n], list(today[:start_idx])
 
 def _get_next_n_quarters_from_entsoe(n, e):
+    """Return (next n prices, prices before those that are still in the attribute)."""
     prices = []
+    earlier = []
     if p := e.attributes.get("prices"):
         quarter_before_now = dt.utcnow() - timedelta(minutes=15)
         for item in p:
@@ -91,14 +101,36 @@ def _get_next_n_quarters_from_entsoe(n, e):
                 prices.append(item["price"])
                 if len(prices) == n:
                     break
-    return prices
+            else:
+                earlier.append(item["price"])
+    return prices, earlier
+
+def _pad(prices, earlier, n, padding):
+    """Extend prices to n elements.
+
+    last: repeat the last known price.
+    previous_day: use the price at the same time one day earlier (typically
+    today's price when tomorrow's prices aren't published yet), falling back
+    to the last known price when that isn't available.
+    """
+    padded = list(prices)
+    if padding == PREVIOUS_DAY:
+        known = list(earlier) + list(prices)
+        offset = len(earlier)
+        for i in range(len(prices), n):
+            j = offset + i - QUARTERS_PER_DAY
+            value = known[j] if 0 <= j < len(known) else None
+            padded.append(value if value is not None else padded[-1])
+        return padded
+    return padded + (n - len(padded)) * [padded[-1]]
 
 
 class NordpoolDiffSensor(SensorEntity):
     _attr_icon = "mdi:flash"
 
-    def __init__(self, nordpool_entity_id, entsoe_entity_id, filter_length, filter_type, normalize, unit):
+    def __init__(self, nordpool_entity_id, entsoe_entity_id, filter_length, filter_type, normalize, unit, padding=LAST):
         self._nordpool_entity_id = nordpool_entity_id
+        self._padding = padding
         self._entsoe_entity_id = entsoe_entity_id
         self._filter_length = filter_length
         if normalize == MAX:
@@ -131,11 +163,13 @@ class NordpoolDiffSensor(SensorEntity):
             filter = [-1]
             filter += [1 / (filter_length - 1)] * (filter_length - 1)
             self._compute = _with_filter(filter, normalize)
+        # Default padding keeps the original name and unique id.
+        padding_suffix = "" if padding == LAST else f"_padding_{padding}"
         self._attr_native_unit_of_measurement = unit
-        self._attr_name = f"nordpool_diff_{filter_type}_{filter_length}{normalize_suffix}"
+        self._attr_name = f"nordpool_diff_{filter_type}_{filter_length}{normalize_suffix}{padding_suffix}"
         # https://developers.home-assistant.io/docs/entity_registry_index/ : Entities should not include the domain in
         # their Unique ID as the system already accounts for these identifiers:
-        self._attr_unique_id = f"{filter_type}_{filter_length}_{unit}{normalize_suffix}"
+        self._attr_unique_id = f"{filter_type}_{filter_length}_{unit}{normalize_suffix}{padding_suffix}"
         self._state = self._next_quarter = STATE_UNKNOWN
 
     @property
@@ -155,26 +189,27 @@ class NordpoolDiffSensor(SensorEntity):
 
     def _get_next_n_quarters(self, n):
         prices = []
+        earlier = []
         # Prefer entsoe:
         if e := self.hass.states.get(self._entsoe_entity_id):
             try:
-                prices = _get_next_n_quarters_from_entsoe(n, e)
+                prices, earlier = _get_next_n_quarters_from_entsoe(n, e)
                 _LOGGER.debug(f"{n} prices from entsoe {prices}")
             except:
                 _LOGGER.exception("_get_next_n_quarters_from_entsoe")
         # Fall back to nordpool:
         if (len(prices) < n) and (np := self.hass.states.get(self._nordpool_entity_id)):
             try:
-                np_prices = _get_next_n_quarters_from_nordpool(n, np)
+                np_prices, np_earlier = _get_next_n_quarters_from_nordpool(n, np)
                 _LOGGER.debug(f"{n} prices from nordpool {np_prices}")
                 if len(np_prices) > len(prices):
-                    prices = np_prices
+                    prices, earlier = np_prices, np_earlier
             except:
                 _LOGGER.exception("_get_next_n_quarters_from_nordpool")
         # Fail gracefully if nothing works:
         if not prices:
             return n * [0]
-        # Pad if needed, using last element.
-        prices = prices + (n - len(prices)) * [prices[-1]]
+        # Pad if needed.
+        prices = _pad(prices, earlier, n, self._padding)
         _LOGGER.debug(f"{n} prices after padding {prices}")
         return prices
